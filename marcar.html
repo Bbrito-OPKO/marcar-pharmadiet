@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marcar visita — Pharmadiet Veterinary</title>
+<style>
+  :root{--navy:#175FAA;--navy-d:#134F8E;--green:#87BA25;--green-d:#6f9a1e;--ink:#2B3441;--muted:#6C7889;--line:#E2E8F0;--bg:#F4F7FB}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink)}
+  .wrap{max-width:520px;margin:0 auto;padding:24px 16px 48px}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--navy);font-size:18px;margin-bottom:18px}
+  .brand .dot{width:12px;height:12px;border-radius:50%;background:var(--green)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(20,40,70,.06);padding:22px 20px}
+  h1{font-size:19px;margin:0 0 6px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 18px;line-height:1.5}
+  .slot{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:.15s;font-size:15px}
+  .slot:hover{border-color:#9CC0E8}
+  .slot.sel{border-color:var(--navy);background:#EAF2FB}
+  .slot .d{font-weight:700;text-transform:capitalize}
+  .slot .h{font-weight:800;color:var(--navy);font-size:17px}
+  .slot.sel .h{color:var(--navy-d)}
+  .confirm{margin-top:8px;display:none}
+  .confirm.show{display:block}
+  .confirm p{font-size:14px;color:var(--ink);margin:6px 0 12px}
+  .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;text-decoration:none;color:#fff}
+  .btn.wa{background:#25D366}.btn.wa:hover{background:#1FB855}
+  .btn.mail{background:var(--navy)}.btn.mail:hover{background:var(--navy-d)}
+  .btn.cal{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+  .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
+  .err{color:#C0392B;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span class="dot"></span> Pharmadiet Veterinary</div>
+  <div class="card" id="card"><p class="err">A carregar…</p></div>
+  <div class="foot">Marcação de visita comercial · Pharmadiet</div>
+</div>
+<script>
+function dec(q){if(!q)return null;try{return JSON.parse(decodeURIComponent(escape(atob(q))));}catch(e){try{return JSON.parse(decodeURIComponent(q));}catch(_){return null;}}}
+var WD=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function fmt(iso){var p=iso.split('T');var d=p[0].split('-');var dt=new Date(+d[0],+d[1]-1,+d[2]);return {wd:WD[dt.getDay()],dm:d[2]+'/'+d[1],hr:(p[1]||'10:00').replace(':00','h').replace(':','h'),date:p[0],time:(p[1]||'10:00')};}
+function gcal(c,iso){var p=iso.split('T');var d=p[0].replace(/-/g,'');var t=(p[1]||'10:00');var hh=(+t.split(':')[0]);var mm=t.split(':')[1];var s=d+'T'+t.replace(':','')+'00';var e=d+'T'+String(hh+1)+mm+'00';var txt='Visita Pharmadiet'+(c?(' — '+c):'');return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(txt)+'&dates='+s+'/'+e;}
+function render(){
+  var card=document.getElementById('card');
+  var data=dec(new URLSearchParams(location.search).get('q'));
+  if(!data||!data.s||!data.s.length){card.innerHTML='<h1>Link inválido</h1><p class="sub">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
+  var nome=data.n?(' '+data.n):'';
+  var quem=data.c?(' a '+esc(data.c)):'';
+  var slots='';
+  data.s.forEach(function(iso,i){var f=fmt(iso);slots+='<button class="slot" data-i="'+i+'"><span class="d">'+f.wd+' · '+f.dm+'</span><span class="h">'+f.hr+'</span></button>';});
+  card.innerHTML='<h1>Olá'+esc(nome)+'! 👋</h1>'+
+    '<p class="sub">Escolha o dia e hora que lhe der mais jeito para a visita da Pharmadiet'+quem+':</p>'+
+    slots+'<div class="confirm" id="cf"></div>';
+  card.querySelectorAll('.slot').forEach(function(b){
+    b.onclick=function(){
+      card.querySelectorAll('.slot').forEach(function(z){z.classList.remove('sel');});
+      b.classList.add('sel');
+      var iso=data.s[+b.dataset.i];
+      var f=fmt(iso);
+      var txt='Olá! Confirmo a visita da Pharmadiet'+(data.c?(' à '+data.c):'')+': '+f.wd+', '+f.dm+' às '+f.hr+'. Obrigado!';
+      var sent=false;
+      if(data.r){try{fetch(data.r,{method:'POST',mode:'no-cors',body:JSON.stringify({k:data.k||'',c:data.c||'',slot:iso,id:data.id||(''+Date.now())})});sent=true;}catch(_){}}
+      var cf=document.getElementById('cf');
+      var html=sent
+        ?'<p>✓ <b>Pedido enviado</b> — '+f.wd+', '+f.dm+' às '+f.hr+'. O Bruno confirma consigo. Se quiser, avise também por:</p>'
+        :'<p>Escolheu <b>'+f.wd+', '+f.dm+' às '+f.hr+'</b>. Toque para confirmar:</p>';
+      if(data.w)html+='<a class="btn wa" href="https://wa.me/'+data.w+'?text='+encodeURIComponent(txt)+'">✓ Confirmar por WhatsApp</a>';
+      if(data.e)html+='<a class="btn mail" href="mailto:'+data.e+'?subject='+encodeURIComponent('Confirmação de visita'+(data.c?(' — '+data.c):''))+'&body='+encodeURIComponent(txt)+'">✓ Confirmar por email</a>';
+      html+='<a class="btn cal" href="'+gcal(data.c,data.s[+b.dataset.i])+'" target="_blank">📅 Adicionar ao meu calendário</a>';
+      cf.innerHTML=html;cf.classList.add('show');
+      cf.scrollIntoView({behavior:'smooth',block:'nearest'});
+    };
+  });
+}
+render();
+</script>
+</body>
+</html>
