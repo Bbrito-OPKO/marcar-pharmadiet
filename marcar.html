@@ -58,8 +58,6 @@ function render(){
   var data=dec(new URLSearchParams(location.search).get('q'));
   if(!data||!data.s||!data.s.length){card.innerHTML='<h1>Link inválido</h1><p class="sub">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
   var R=data.r||DEFAULT_R, W=data.w||DEFAULT_W, E=data.e||DEFAULT_E;
-  var nome=data.n?(' '+data.n):'';
-  var quem=data.c?(' a '+esc(data.c)):'';
   // agrupar as vagas por dia, preservando a ordem
   var ordem=[], grupos={};
   data.s.forEach(function(iso,i){var f=fmt(iso);var key=f.date;if(!grupos[key]){grupos[key]={f:f,slots:[]};ordem.push(key);}grupos[key].slots.push({iso:iso,i:i,hr:f.hr});});
@@ -70,8 +68,8 @@ function render(){
     g.slots.forEach(function(s){ag+='<button class="chip" data-i="'+s.i+'">'+s.hr+'</button>';});
     ag+='</div></div>';
   });
-  card.innerHTML='<h1>Olá'+esc(nome)+'! 👋</h1>'+
-    '<p class="sub">Escolha o horário que lhe der mais jeito para a visita da Pharmadiet'+quem+':</p>'+
+  card.innerHTML='<h1>Olá! 👋</h1>'+
+    '<p class="sub">Escolha o horário que lhe der mais jeito para a visita da Pharmadiet:</p>'+
     ag+'<div class="confirm" id="cf"></div>';
   card.querySelectorAll('.chip').forEach(function(b){
     b.onclick=function(){
