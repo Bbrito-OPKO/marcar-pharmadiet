@@ -17,26 +17,15 @@
   .brand .dot{width:12px;height:12px;border-radius:50%;background:var(--green)}
   .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(20,40,70,.06);padding:22px 20px}
   h1{font-size:19px;margin:0 0 6px}
-  .sub{color:var(--muted);font-size:14px;margin:0 0 16px;line-height:1.5}
-  .cal-h{font-weight:800;color:var(--navy);font-size:16px;text-transform:capitalize;margin-bottom:10px}
-  .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
-  .dow span{text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase}
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-  .cell{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;border-radius:12px;color:#C5CED9}
-  .cell small{font-size:9px;line-height:1;margin-top:1px;color:inherit;opacity:.8}
-  .cell.avail{background:#EAF2FB;color:var(--navy);font-weight:800;cursor:pointer;border:1.5px solid transparent;transition:.15s}
-  .cell.avail:hover{border-color:#9CC0E8}
-  .cell.avail.dot::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--green);margin-top:2px}
-  .cell.sel{background:var(--navy);color:#fff}
-  .cell.sel.dot::after{background:#fff}
-  .times{margin-top:16px;border-top:1px solid var(--line);padding-top:14px;display:none}
-  .times.show{display:block}
-  .times-h{font-weight:800;color:var(--navy);font-size:15px;text-transform:capitalize;margin-bottom:10px}
+  .sub{color:var(--muted);font-size:14px;margin:0 0 18px;line-height:1.5}
+  .day{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:12px;background:#FCFDFF}
+  .day-h{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--navy);font-size:15px;text-transform:capitalize;margin-bottom:10px}
+  .day-h .cal{width:9px;height:9px;border-radius:50%;background:var(--green);flex:none}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;color:var(--navy);cursor:pointer;transition:.15s}
+  .chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:9px 16px;font-size:15px;font-weight:800;color:var(--navy);cursor:pointer;transition:.15s}
   .chip:hover{border-color:#9CC0E8;background:#F3F8FF}
   .chip.sel{border-color:var(--navy);background:var(--navy);color:#fff}
-  .confirm{margin-top:14px;display:none}
+  .confirm{margin-top:6px;display:none}
   .confirm.show{display:block}
   .confirm p{font-size:14px;color:var(--ink);margin:6px 0 12px;line-height:1.5}
   .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;text-decoration:none;color:#fff}
@@ -54,70 +43,54 @@
   <div class="foot">Marcação de visita comercial · Pharmadiet</div>
 </div>
 <script>
+// Predefinicoes (ficam FORA do link -> URL mais curto). O link so precisa de
+// trazer 'r'/'w'/'e' se forem diferentes destes.
 var DEFAULT_R='https://script.google.com/macros/s/AKfycbzedS0F01jmcMy-mLf4deECfyUr5feSak9e1M5NHlccfUU4dC1dpwNxmg722aRKjBej7g/exec';
 var DEFAULT_W='351925110587';
 var DEFAULT_E='bbrito@opko.com';
-var WD=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
-var DOW=['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'];
-var MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
-var MESc=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
 function dec(q){if(!q)return null;try{return JSON.parse(decodeURIComponent(escape(atob(q))));}catch(e){try{return JSON.parse(decodeURIComponent(q));}catch(_){return null;}}}
-function parseD(iso){var d=iso.slice(0,10).split('-');return new Date(+d[0],+d[1]-1,+d[2]);}
-function isoOf(dt){return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);}
-function fmt(iso){var p=iso.split('T');var dt=parseD(p[0]);return {wd:WD[dt.getDay()],dm:p[0].split('-')[2]+'/'+p[0].split('-')[1],hr:(p[1]||'10:00').replace(':00','h').replace(':','h'),date:p[0],time:(p[1]||'10:00')};}
+var WD=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function fmt(iso){var p=iso.split('T');var d=p[0].split('-');var dt=new Date(+d[0],+d[1]-1,+d[2]);return {wd:WD[dt.getDay()],dm:d[2]+'/'+d[1],hr:(p[1]||'10:00').replace(':00','h').replace(':','h'),date:p[0],time:(p[1]||'10:00')};}
 function gcal(c,iso){var p=iso.split('T');var d=p[0].replace(/-/g,'');var t=(p[1]||'10:00');var hh=(+t.split(':')[0]);var mm=t.split(':')[1];var s=d+'T'+t.replace(':','')+'00';var e=d+'T'+String(hh+1)+mm+'00';var txt='Visita Pharmadiet'+(c?(' — '+c):'');return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(txt)+'&dates='+s+'/'+e;}
 function render(){
   var card=document.getElementById('card');
   var data=dec(new URLSearchParams(location.search).get('q'));
   if(!data||!data.s||!data.s.length){card.innerHTML='<h1>Link inválido</h1><p class="sub">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
   var R=data.r||DEFAULT_R, W=data.w||DEFAULT_W, E=data.e||DEFAULT_E;
-  var byDate={}; data.s.forEach(function(iso,i){var d=iso.slice(0,10); (byDate[d]=byDate[d]||[]).push({iso:iso,i:i,time:(iso.split('T')[1]||'10:00')});});
-  var dates=Object.keys(byDate).sort();
-  // janela de 4 semanas (28 dias) a partir da segunda-feira da 1.a semana com vaga
-  var start=parseD(dates[0]); var off=(start.getDay()+6)%7; start.setDate(start.getDate()-off);
-  var cells=[]; for(var i=0;i<28;i++){var dt=new Date(start);dt.setDate(dt.getDate()+i);cells.push(isoOf(dt));}
-  var last=parseD(cells[27]);
-  var titulo=MES[start.getMonth()]+(start.getMonth()!==last.getMonth()?(' – '+MES[last.getMonth()]):'')+' '+last.getFullYear();
-  var h='<h1>Olá! 👋</h1><p class="sub">Escolha o dia para a visita da Pharmadiet:</p>';
-  h+='<div class="cal-h">'+titulo+'</div>';
-  h+='<div class="dow">'+DOW.map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="grid">';
-  cells.forEach(function(iso){
-    var dt=parseD(iso); var num=dt.getDate(); var mlbl=(num===1?('<small>'+MESc[dt.getMonth()]+'</small>'):'');
-    if(byDate[iso])h+='<div class="cell avail dot" data-iso="'+iso+'">'+num+mlbl+'</div>';
-    else h+='<div class="cell">'+num+mlbl+'</div>';
+  // agrupar as vagas por dia, preservando a ordem
+  var ordem=[], grupos={};
+  data.s.forEach(function(iso,i){var f=fmt(iso);var key=f.date;if(!grupos[key]){grupos[key]={f:f,slots:[]};ordem.push(key);}grupos[key].slots.push({iso:iso,i:i,hr:f.hr});});
+  var ag='';
+  ordem.forEach(function(key){
+    var g=grupos[key];
+    ag+='<div class="day"><div class="day-h"><span class="cal"></span>'+g.f.wd+' · '+g.f.dm+'</div><div class="chips">';
+    g.slots.forEach(function(s){ag+='<button class="chip" data-i="'+s.i+'">'+s.hr+'</button>';});
+    ag+='</div></div>';
   });
-  h+='</div><div class="times" id="times"></div><div class="confirm" id="cf"></div>';
-  card.innerHTML=h;
-  var timesEl=document.getElementById('times'), cfEl=document.getElementById('cf');
-  card.querySelectorAll('.cell.avail').forEach(function(c){c.onclick=function(){pickDay(c.dataset.iso,c);};});
-  function pickDay(iso,cell){
-    card.querySelectorAll('.cell').forEach(function(z){z.classList.remove('sel');});
-    cell.classList.add('sel');
-    cfEl.classList.remove('show');cfEl.innerHTML='';
-    var f=fmt(iso+'T00:00');
-    var slots=byDate[iso].slice().sort(function(a,b){return a.time<b.time?-1:1;});
-    var hh='<div class="times-h">'+f.wd+', '+f.dm+'</div><div class="chips">';
-    slots.forEach(function(s){hh+='<button class="chip" data-i="'+s.i+'">'+fmt(s.iso).hr+'</button>';});
-    hh+='</div>';
-    timesEl.innerHTML=hh;timesEl.classList.add('show');
-    timesEl.querySelectorAll('.chip').forEach(function(b){b.onclick=function(){pickTime(b);};});
-    timesEl.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }
-  function pickTime(btn){
-    timesEl.querySelectorAll('.chip').forEach(function(z){z.classList.remove('sel');});
-    btn.classList.add('sel');
-    var iso=data.s[+btn.dataset.i]; var f=fmt(iso);
-    var txt='Olá! Confirmo a visita da Pharmadiet'+(data.c?(' à '+data.c):'')+': '+f.wd+', '+f.dm+' às '+f.hr+'. Obrigado!';
-    var sent=false;
-    if(R){try{fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify({k:data.k||'',c:data.c||'',slot:iso,id:data.id||(''+Date.now())})});sent=true;}catch(_){}}
-    var html=sent
-      ?'<p>✓ <b>Pedido enviado</b> — '+f.wd+', '+f.dm+' às '+f.hr+'. O Bruno confirma consigo. Se quiser, avise também por:</p>'
-      :'<p>Escolheu <b>'+f.wd+', '+f.dm+' às '+f.hr+'</b>. Toque para confirmar:</p>';
-    if(W)html+='<a class="btn wa" href="https://wa.me/'+W+'?text='+encodeURIComponent(txt)+'">✓ Confirmar por WhatsApp</a>';
-    if(E)html+='<a class="btn mail" href="mailto:'+E+'?subject='+encodeURIComponent('Confirmação de visita'+(data.c?(' — '+data.c):''))+'&body='+encodeURIComponent(txt)+'">✓ Confirmar por email</a>';
-    html+='<a class="btn cal" href="'+gcal(data.c,iso)+'" target="_blank">📅 Adicionar ao meu calendário</a>';
-    cfEl.innerHTML=html;cfEl.classList.add('show');cfEl.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }
+  card.innerHTML='<h1>Olá! 👋</h1>'+
+    '<p class="sub">Escolha o horário que lhe der mais jeito para a visita da Pharmadiet:</p>'+
+    ag+'<div class="confirm" id="cf"></div>';
+  card.querySelectorAll('.chip').forEach(function(b){
+    b.onclick=function(){
+      card.querySelectorAll('.chip').forEach(function(z){z.classList.remove('sel');});
+      b.classList.add('sel');
+      var iso=data.s[+b.dataset.i];
+      var f=fmt(iso);
+      var txt='Olá! Confirmo a visita da Pharmadiet'+(data.c?(' à '+data.c):'')+': '+f.wd+', '+f.dm+' às '+f.hr+'. Obrigado!';
+      var sent=false;
+      if(R){try{fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify({k:data.k||'',c:data.c||'',slot:iso,id:data.id||(''+Date.now())})});sent=true;}catch(_){}}
+      var cf=document.getElementById('cf');
+      var html=sent
+        ?'<p>✓ <b>Pedido enviado</b> — '+f.wd+', '+f.dm+' às '+f.hr+'. O Bruno confirma consigo. Se quiser, avise também por:</p>'
+        :'<p>Escolheu <b>'+f.wd+', '+f.dm+' às '+f.hr+'</b>. Toque para confirmar:</p>';
+      if(W)html+='<a class="btn wa" href="https://wa.me/'+W+'?text='+encodeURIComponent(txt)+'">✓ Confirmar por WhatsApp</a>';
+      if(E)html+='<a class="btn mail" href="mailto:'+E+'?subject='+encodeURIComponent('Confirmação de visita'+(data.c?(' — '+data.c):''))+'&body='+encodeURIComponent(txt)+'">✓ Confirmar por email</a>';
+      html+='<a class="btn cal" href="'+gcal(data.c,iso)+'" target="_blank">📅 Adicionar ao meu calendário</a>';
+      cf.innerHTML=html;cf.classList.add('show');
+      cf.scrollIntoView({behavior:'smooth',block:'nearest'});
+    };
+  });
 }
 render();
 </script>
