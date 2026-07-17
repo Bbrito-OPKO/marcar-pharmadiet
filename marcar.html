@@ -69,6 +69,8 @@ function gcal(c,iso){var p=iso.split('T');var d=p[0].replace(/-/g,'');var t=(p[1
 function render(){
   var card=document.getElementById('card');
   var data=dec(new URLSearchParams(location.search).get('q'));
+  // Formato compacto: b (1.º dia) + d[[offset,mascara]] -> reconstroi data.s (horas de ROTA_SLOTS)
+  if(data&&data.d&&data.b&&!data.s){var HRS=['10:00','11:15','12:30','15:00','16:15'];var base=parseD(data.b);data.s=[];data.d.forEach(function(pr){var dt=new Date(base);dt.setDate(dt.getDate()+pr[0]);var iso=isoOf(dt);for(var i=0;i<HRS.length;i++){if(pr[1]&(1<<i))data.s.push(iso+'T'+HRS[i]);}});}
   if(!data||!data.s||!data.s.length){card.innerHTML='<h1>Link inválido</h1><p class="sub">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
   var R=data.r||DEFAULT_R, W=data.w||DEFAULT_W, E=data.e||DEFAULT_E;
   var byDate={}; data.s.forEach(function(iso,i){var d=iso.slice(0,10); (byDate[d]=byDate[d]||[]).push({iso:iso,i:i,time:(iso.split('T')[1]||'10:00')});});
