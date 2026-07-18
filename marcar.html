@@ -72,10 +72,12 @@ function render(){
   var data=dec(new URLSearchParams(location.search).get('q'));
   // byDate = {iso:{starts:['HH:MM'…], busy:[[iníM,fimM]…]}}.
   // Formato novo: d[[offset,[horas],[[bs,be]]]]. Suporta o antigo (máscara) e ?s legado.
+  // Em pr[1]: >=24 = minutos desde a meia-noite (ex. 850 = 14:10, horas flexíveis);
+  // <24 = hora inteira (links gerados antes de 2026-07-18, ex. 10 = 10:00).
   var byDate={};
   if(data&&data.d&&data.b){ var base=parseD(data.b); var HRSm=['10:00','11:15','12:30','15:00','16:15'];
     data.d.forEach(function(pr){var dt=new Date(base);dt.setDate(dt.getDate()+pr[0]);var iso=isoOf(dt);var st=[],bz=[];
-      if(Object.prototype.toString.call(pr[1])==='[object Array]'){pr[1].forEach(function(hh){st.push((hh<10?'0':'')+hh+':00');});bz=pr[2]||[];}
+      if(Object.prototype.toString.call(pr[1])==='[object Array]'){pr[1].forEach(function(v){st.push(m2h(v<24?v*60:v));});bz=pr[2]||[];}
       else{for(var i=0;i<HRSm.length;i++){if(pr[1]&(1<<i))st.push(HRSm[i]);}}
       byDate[iso]={starts:st,busy:bz};});
   } else if(data&&data.s&&data.s.length){ data.s.forEach(function(iso){var dd=iso.slice(0,10),tt=iso.split('T')[1]||'10:00';(byDate[dd]=byDate[dd]||{starts:[],busy:[]}).starts.push(tt);}); }
