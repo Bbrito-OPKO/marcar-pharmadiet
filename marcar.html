@@ -119,7 +119,8 @@ function render(){
     var isoT=iso+'T'+btn.dataset.t; var f=fmt(isoT);
     var txt='Olá! Confirmo a visita da Pharmadiet'+(data.c?(' à '+data.c):'')+': '+f.wd+', '+f.dm+' às '+f.hr+'. Obrigado!';
     var sent=false;
-    if(R){try{fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify({k:data.k||'',c:data.c||'',slot:isoT,id:data.id||(''+Date.now())})});sent=true;}catch(_){}}
+    // w = segredo de escrita do rele: vem no payload do link (nunca embutido nesta pagina, que e publica)
+    if(R){try{fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify({k:data.k||'',c:data.c||'',slot:isoT,id:data.id||(''+Date.now()),w:data.w||''})});sent=true;}catch(_){}}
     var html=sent
       ?'<p>✓ <b>Pedido enviado</b> — '+f.wd+', '+f.dm+' às '+f.hr+'. O Bruno confirma consigo. Se quiser, avise também por:</p>'
       :'<p>Escolheu <b>'+f.wd+', '+f.dm+' às '+f.hr+'</b>. Toque para confirmar:</p>';
