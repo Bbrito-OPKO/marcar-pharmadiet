@@ -40,9 +40,8 @@
   .confirm{margin-top:14px;display:none}
   .confirm.show{display:block}
   .confirm p{font-size:14px;color:var(--ink);margin:6px 0 12px;line-height:1.5}
+  .sent{background:var(--green);color:#fff;border-radius:14px;padding:16px 18px;font-size:17px;font-weight:800;line-height:1.45;margin:6px 0 12px;box-shadow:0 6px 18px rgba(135,186,37,.35)}
   .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;text-decoration:none;color:#fff}
-  .btn.wa{background:#25D366}.btn.wa:hover{background:#1FB855}
-  .btn.mail{background:var(--navy)}.btn.mail:hover{background:var(--navy-d)}
   .btn.cal{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
   .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
   .err{color:#C0392B;font-size:14px}
@@ -56,8 +55,6 @@
 </div>
 <script>
 var DEFAULT_R='https://script.google.com/macros/s/AKfycbzedS0F01jmcMy-mLf4deECfyUr5feSak9e1M5NHlccfUU4dC1dpwNxmg722aRKjBej7g/exec';
-var DEFAULT_W='351925110587';
-var DEFAULT_E='bbrito@opko.com';
 var WD=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
 var DOW=['Seg','Ter','Qua','Qui','Sex'];
 var MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
@@ -83,9 +80,9 @@ function render(){
   } else if(data&&data.s&&data.s.length){ data.s.forEach(function(iso){var dd=iso.slice(0,10),tt=iso.split('T')[1]||'10:00';(byDate[dd]=byDate[dd]||{starts:[],busy:[]}).starts.push(tt);}); }
   var dates=Object.keys(byDate).filter(function(k){return byDate[k].starts.length;}).sort();
   if(!dates.length){card.innerHTML='<h1>Link inválido</h1><p class="sub">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
-  // wa/e = contactos do Bruno (payload); data.w e o TOKEN de escrita do rele, NUNCA um numero
-  // (ate 2026-07-22 usava-se data.w como numero -> o botao WhatsApp gerava wa.me/<token> partido)
-  var R=data.r||DEFAULT_R, W=data.wa||DEFAULT_W, E=data.e||DEFAULT_E;
+  // (2026-07-22, decisao do Bruno) os botoes "Confirmar por WhatsApp/email" foram removidos:
+  // o rele + confirmacao automatica fecham o ciclo; fica so o "Adicionar ao meu calendario".
+  var R=data.r||DEFAULT_R;
   function m2h(m){var H=Math.floor(m/60),M=m%60;return (H<10?'0':'')+H+':'+(M<10?'0':'')+M;}
   // calendário 3 semanas (Seg–Sex) a partir da segunda da 1.ª semana com vaga
   var start=parseD(dates[0]); var off=(start.getDay()+6)%7; start.setDate(start.getDate()-off);
@@ -119,15 +116,12 @@ function render(){
     timesEl.querySelectorAll('.chip').forEach(function(z){z.classList.remove('sel');});
     btn.classList.add('sel');
     var isoT=iso+'T'+btn.dataset.t; var f=fmt(isoT);
-    var txt='Olá! Confirmo a visita da Pharmadiet'+(data.c?(' à '+data.c):'')+': '+f.wd+', '+f.dm+' às '+f.hr+'. Obrigado!';
     var sent=false;
     // w = segredo de escrita do rele: vem no payload do link (nunca embutido nesta pagina, que e publica)
     if(R){try{fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify({k:data.k||'',c:data.c||'',slot:isoT,id:data.id||(''+Date.now()),w:data.w||''})});sent=true;}catch(_){}}
     var html=sent
-      ?'<p>✓ <b>Pedido enviado</b> — '+f.wd+', '+f.dm+' às '+f.hr+'. O Bruno confirma consigo. Se quiser, avise também por:</p>'
-      :'<p>Escolheu <b>'+f.wd+', '+f.dm+' às '+f.hr+'</b>. Toque para confirmar:</p>';
-    if(W)html+='<a class="btn wa" href="https://wa.me/'+W+'?text='+encodeURIComponent(txt)+'">✓ Confirmar por WhatsApp</a>';
-    if(E)html+='<a class="btn mail" href="mailto:'+E+'?subject='+encodeURIComponent('Confirmação de visita'+(data.c?(' — '+data.c):''))+'&body='+encodeURIComponent(txt)+'">✓ Confirmar por email</a>';
+      ?'<div class="sent">✓ Pedido enviado — '+f.wd+', '+f.dm+' às '+f.hr+'. Confirmo consigo de seguida!</div>'
+      :'<p>Escolheu <b>'+f.wd+', '+f.dm+' às '+f.hr+'</b>, mas não foi possível enviar o pedido — por favor responda diretamente à mensagem que recebeu.</p>';
     html+='<a class="btn cal" href="'+gcal(data.c,isoT)+'" target="_blank">📅 Adicionar ao meu calendário</a>';
     cfEl.innerHTML=html;cfEl.classList.add('show');cfEl.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
