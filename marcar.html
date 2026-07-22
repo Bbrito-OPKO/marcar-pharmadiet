@@ -83,7 +83,9 @@ function render(){
   } else if(data&&data.s&&data.s.length){ data.s.forEach(function(iso){var dd=iso.slice(0,10),tt=iso.split('T')[1]||'10:00';(byDate[dd]=byDate[dd]||{starts:[],busy:[]}).starts.push(tt);}); }
   var dates=Object.keys(byDate).filter(function(k){return byDate[k].starts.length;}).sort();
   if(!dates.length){card.innerHTML='<h1>Link inválido</h1><p class="sub">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
-  var R=data.r||DEFAULT_R, W=data.w||DEFAULT_W, E=data.e||DEFAULT_E;
+  // wa/e = contactos do Bruno (payload); data.w e o TOKEN de escrita do rele, NUNCA um numero
+  // (ate 2026-07-22 usava-se data.w como numero -> o botao WhatsApp gerava wa.me/<token> partido)
+  var R=data.r||DEFAULT_R, W=data.wa||DEFAULT_W, E=data.e||DEFAULT_E;
   function m2h(m){var H=Math.floor(m/60),M=m%60;return (H<10?'0':'')+H+':'+(M<10?'0':'')+M;}
   // calendário 3 semanas (Seg–Sex) a partir da segunda da 1.ª semana com vaga
   var start=parseD(dates[0]); var off=(start.getDay()+6)%7; start.setDate(start.getDate()-off);
