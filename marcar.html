@@ -17,24 +17,24 @@
   .brand img{height:46px;max-width:72vw;object-fit:contain}
   .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(20,40,70,.06);padding:24px 22px}
   h1{font-size:20px;margin:0 0 18px}
-  .panes{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;align-items:start}
-  .pane-times{border-left:1px solid var(--line);padding-left:22px;height:0;min-height:100%;display:flex;flex-direction:column}
+  .panes{display:grid;grid-template-columns:2fr 1fr;gap:22px}
+  .pane-cal{display:flex;flex-direction:column}
+  .pane-times{border-left:1px solid var(--line);padding-left:22px;display:flex;flex-direction:column}
   .cal-h{font-weight:800;color:var(--navy);font-size:17px;text-transform:capitalize;margin-bottom:12px}
   .dow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px}
   .dow span{text-align:center;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase}
-  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
-  .cell{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px;border-radius:14px;color:#C5CED9}
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;flex:1;grid-auto-rows:minmax(96px,1fr)}
+  .cell{display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px;border-radius:14px;color:#C5CED9}
   .cell small{font-size:10px;line-height:1;margin-top:2px;opacity:.8}
   .cell.avail{background:#EAF2FB;color:var(--navy);font-weight:800;cursor:pointer;border:1.5px solid transparent;transition:.15s}
   .cell.avail:hover{border-color:#9CC0E8}
   .cell.avail.dot::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);margin-top:3px}
   .cell.sel{background:var(--navy);color:#fff}
   .cell.sel.dot::after{background:#fff}
-  .times-h{font-weight:800;color:var(--navy);font-size:16px;text-transform:capitalize;margin-bottom:4px}
-  .dur{color:var(--muted);font-size:13.5px;font-weight:600;margin:0 0 14px}
+  .times-h{font-weight:800;color:var(--navy);font-size:16px;text-transform:capitalize;margin-bottom:12px;text-align:center}
   .hint{color:var(--muted);font-size:14px;line-height:1.5;margin-top:36px;text-align:center}
-  .slots{display:flex;flex-direction:column;gap:8px;flex:1;min-height:0;overflow-y:auto;padding-right:6px}
-  .chip{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:12px 8px;font-size:15px;font-weight:800;color:var(--navy);cursor:pointer;transition:.15s;text-align:center}
+  .slots{display:flex;flex-direction:column;gap:6px}
+  .chip{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 6px;font-size:14px;font-weight:800;color:var(--navy);cursor:pointer;transition:.15s;text-align:center}
   .chip:hover{border-color:#9CC0E8;background:#F3F8FF}
   .chip.sel{border-color:var(--navy);background:var(--navy);color:#fff}
   .sent{background:var(--green);color:#fff;border:2px solid var(--green-d);border-radius:14px;padding:14px 16px;font-size:15px;font-weight:800;line-height:1.45;margin:6px 0 12px;text-align:center}
@@ -50,9 +50,9 @@
     .cell small{font-size:9px}
     .dow span{font-size:10px}
     .grid,.dow{gap:5px}
-    .chip{padding:9px 6px;font-size:13.5px}
+    .grid{grid-auto-rows:minmax(48px,1fr)}
+    .chip{padding:7px 5px;font-size:12.5px}
     .times-h{font-size:14px}
-    .dur{font-size:12px}
     .hint{margin-top:16px;font-size:13px}
     .cal-h{font-size:15px}
   }
@@ -132,7 +132,6 @@ function render(){
     cell.classList.add('sel');
     var f=fmt(iso+'T00:00'); var day=byDate[iso];
     var hh='<div class="times-h">'+f.wd+', '+f.dm+'</div>';
-    hh+='<div class="dur">Reunião de '+DUR_MIN+' minutos</div>';
     hh+='<div class="slots">';
     day.starts.slice().sort().forEach(function(t){hh+='<button class="chip" data-t="'+t+'">'+t.replace(':','h')+'</button>';});
     hh+='</div>';
