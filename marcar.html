@@ -17,7 +17,7 @@
   .brand img{height:46px;max-width:72vw;object-fit:contain}
   .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(20,40,70,.06);padding:24px 22px}
   h1{font-size:20px;margin:0 0 18px}
-  .panes{display:grid;grid-template-columns:2fr 1fr;gap:22px}
+  .panes{display:grid;grid-template-columns:2fr 1fr;gap:22px;min-height:360px}
   .pane-cal{display:flex;flex-direction:column}
   .pane-times{border-left:1px solid var(--line);padding-left:22px;display:flex;flex-direction:column}
   .cal-h{font-weight:800;color:var(--navy);font-size:17px;text-transform:capitalize;margin-bottom:12px}
@@ -44,15 +44,17 @@
   .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
   .err{color:#C0392B;font-size:14px}
   @media(max-width:759.98px){
-    .panes{gap:12px}
+    .panes{gap:12px;min-height:300px}
     .pane-times{padding-left:12px}
     .cell{font-size:14px;border-radius:10px}
     .cell small{font-size:9px}
     .dow span{font-size:10px}
     .grid,.dow{gap:5px}
-    .grid{grid-auto-rows:minmax(48px,1fr)}
+    .grid{grid-auto-rows:minmax(60px,1fr)}
     .chip{padding:7px 5px;font-size:12.5px}
     .times-h{font-size:14px}
+    .times-h .th-sep{display:none}
+    .times-h .th-dm{display:block}
     .hint{margin-top:16px;font-size:13px}
     .cal-h{font-size:15px}
   }
@@ -131,7 +133,7 @@ function render(){
     card.querySelectorAll('.cell').forEach(function(z){z.classList.remove('sel');});
     cell.classList.add('sel');
     var f=fmt(iso+'T00:00'); var day=byDate[iso];
-    var hh='<div class="times-h">'+f.wd+', '+f.dm+'</div>';
+    var hh='<div class="times-h">'+f.wd+'<span class="th-sep">, </span><span class="th-dm">'+f.dm+'</span></div>';
     hh+='<div class="slots">';
     day.starts.slice().sort().forEach(function(t){hh+='<button class="chip" data-t="'+t+'">'+t.replace(':','h')+'</button>';});
     hh+='</div>';
