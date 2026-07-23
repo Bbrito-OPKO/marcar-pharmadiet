@@ -116,8 +116,8 @@ function render(){
   var cells=[]; for(var w=0;w<3;w++){for(var wd=0;wd<5;wd++){var dt=new Date(start);dt.setDate(dt.getDate()+w*7+wd);cells.push(isoOf(dt));}}
   var lastc=parseD(cells[cells.length-1]);
   var titulo=MES[start.getMonth()]+(start.getMonth()!==lastc.getMonth()?(' – '+MES[lastc.getMonth()]):'')+' '+lastc.getFullYear();
-  var h='<h1>Olá! 👋 Escolha o dia</h1>';
-  h+='<div class="panes"><div class="pane-cal">';
+  var h='<div class="panes"><div class="pane-cal">';
+  h+='<h1>Olá! 👋 Escolha o dia</h1>';
   h+='<div class="cal-h">'+titulo+'</div>';
   h+='<div class="dow">'+DOW.map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="grid">';
   cells.forEach(function(iso){var dt=parseD(iso);var num=dt.getDate();var mlbl=(num===1?('<small>'+MESc[dt.getMonth()]+'</small>'):'');
