@@ -29,14 +29,24 @@
   .cell.avail{background:#EAF2FB;color:var(--navy);font-weight:800;cursor:pointer;border:1.5px solid transparent;transition:.15s}
   .cell.avail:hover{border-color:#9CC0E8}
   .cell.avail.dot::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);margin-top:3px}
+  .cell.alt{background:#fff;color:var(--navy);font-weight:800;cursor:pointer;border:1.5px dashed var(--line);transition:.15s}
+  .cell.alt:hover{border-color:#9CC0E8}
   .cell.sel{background:var(--navy);color:#fff}
   .cell.sel.dot::after{background:#fff}
+  .cell.alt.sel{background:var(--navy);color:#fff;border-style:solid}
   .times-h{font-weight:800;color:var(--navy);font-size:16px;text-transform:capitalize;margin-bottom:12px;text-align:center;white-space:nowrap}
   .hint{color:var(--muted);font-size:14px;line-height:1.5;margin-top:36px;text-align:center;max-width:170px}
   .slots{display:flex;flex-direction:column;gap:6px}
   .chip{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 6px;font-size:14px;font-weight:800;color:var(--navy);cursor:pointer;transition:.15s;text-align:center}
   .chip:hover{border-color:#9CC0E8;background:#F3F8FF}
   .chip.sel{border-color:var(--navy);background:var(--navy);color:#fff}
+  .chip.pend{border-style:dashed}
+  .chip.pend.sel{border-style:solid}
+  .pend-note{color:var(--muted);font-size:11px;line-height:1.4;margin-top:6px;text-align:center;max-width:170px}
+  .altbtn,.morebtn{background:#fff;border:1.5px dashed var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s}
+  .altbtn{margin-top:10px}
+  .morebtn{margin-top:6px;padding:7px 6px;font-size:12px}
+  .altbtn:hover,.morebtn:hover{color:var(--navy);border-color:#9CC0E8}
   .sent{background:var(--green);color:#fff;border:2px solid var(--green-d);border-radius:14px;padding:14px 16px;font-size:15px;font-weight:800;line-height:1.45;margin:6px 0 12px;text-align:center}
   .warn{font-size:14px;color:var(--ink);margin:6px 0 12px;line-height:1.5}
   .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;text-decoration:none;color:#fff}
@@ -53,6 +63,9 @@
     .grid,.dow{gap:5px}
     .grid{grid-auto-rows:minmax(60px,1fr)}
     .chip{padding:7px 5px;font-size:12.5px}
+    .altbtn{font-size:11px;padding:6px 8px}
+    .morebtn{font-size:10.5px;padding:6px 5px}
+    .pend-note{font-size:9.5px;max-width:140px}
     .times-h{font-size:12.5px;white-space:normal}
     .times-h .th-wd{white-space:nowrap}
     .hint{max-width:140px}
@@ -87,37 +100,48 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}
 function render(){
   var card=document.getElementById('card');
   var data=dec(new URLSearchParams(location.search).get('q'));
-  // byDate = {iso:{starts:['HH:MM'…]}}.
-  // Formato: d[[offset,[horas],[[bs,be]]]]. Suporta o antigo (máscara) e ?s legado.
-  // Em pr[1]: >=24 = minutos desde a meia-noite (ex. 850 = 14:10); <24 = hora inteira
-  // (links gerados antes de 2026-07-18, ex. 10 = 10:00). O 3.º elemento (ocupados) dos
-  // links antigos é ignorado — a grelha enviada já reflete a agenda e a página não deve
-  // expor as marcações do calendário (decisão de segurança 2026-07-23).
-  var byDate={};
-  if(data&&data.d&&data.b){ var base=parseD(data.b); var HRSm=['10:00','11:15','12:30','15:00','16:15'];
-    data.d.forEach(function(pr){var dt=new Date(base);dt.setDate(dt.getDate()+pr[0]);var iso=isoOf(dt);var st=[];
-      if(Object.prototype.toString.call(pr[1])==='[object Array]'){pr[1].forEach(function(v){st.push(m2h(v<24?v*60:v));});}
-      else{for(var i=0;i<HRSm.length;i++){if(pr[1]&(1<<i))st.push(HRSm[i]);}}
-      byDate[iso]={starts:st};});
-  } else if(data&&data.s&&data.s.length){ data.s.forEach(function(iso){var dd=iso.slice(0,10),tt=iso.split('T')[1]||'10:00';(byDate[dd]=byDate[dd]||{starts:[]}).starts.push(tt);}); }
+  // byDate = {iso:{starts,exA,exP}} (listas de 'HH:MM').
+  // Formato do dia: [offset,[normal],[exA],[exP]] (4 elementos, links 2026-07-23+, sugestões de
+  // hora) ou o antigo [offset,[horas],[]] (3 elementos; o 3.º era o busy e é ignorado — a página
+  // não expõe marcações do calendário, decisão de segurança 2026-07-23). A deteção é pelo
+  // length>=4. Em cada lista: >=24 = minutos desde a meia-noite (ex. 850 = 14:10); <24 = hora
+  // inteira (links pré-2026-07-18). Suporta ainda a máscara antiga e o ?s legado.
+  // data.ad = dias ALTERNATIVOS (botão "Nenhum destes dias dá jeito?"), mesma forma, offsets
+  // relativos ao mesmo b (podem ser negativos). exA agenda logo; exP fica "sujeita a confirmação".
+  var byDate={}, altByDate={};
+  var HRSm=['10:00','11:15','12:30','15:00','16:15'];
+  function m2list(a){var o=[];(a||[]).forEach(function(v){o.push(m2h(v<24?v*60:v));});return o;}
+  function addDia(map,base,pr){var dt=new Date(base);dt.setDate(dt.getDate()+pr[0]);var iso=isoOf(dt);var st=[];
+    if(Object.prototype.toString.call(pr[1])==='[object Array]'){st=m2list(pr[1]);}
+    else{for(var i=0;i<HRSm.length;i++){if(pr[1]&(1<<i))st.push(HRSm[i]);}}
+    var novo=pr.length>=4;
+    map[iso]={starts:st,exA:novo?m2list(pr[2]):[],exP:novo?m2list(pr[3]):[]};}
+  if(data&&data.d&&data.b){ var base=parseD(data.b);
+    data.d.forEach(function(pr){addDia(byDate,base,pr);});
+    if(data.ad&&data.ad.length)data.ad.forEach(function(pr){addDia(altByDate,base,pr);});
+  } else if(data&&data.s&&data.s.length){ data.s.forEach(function(iso){var dd=iso.slice(0,10),tt=iso.split('T')[1]||'10:00';(byDate[dd]=byDate[dd]||{starts:[],exA:[],exP:[]}).starts.push(tt);}); }
   var dates=Object.keys(byDate).filter(function(k){return byDate[k].starts.length;}).sort();
+  var altDates=Object.keys(altByDate).filter(function(k){var d2=altByDate[k];return (d2.starts.length||d2.exA.length||d2.exP.length)&&!byDate[k];}).sort();
   if(!dates.length){card.innerHTML='<h1>Link inválido</h1><p class="warn">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
   // (2026-07-22, decisao do Bruno) os botoes "Confirmar por WhatsApp/email" foram removidos:
   // o rele + confirmacao automatica fecham o ciclo; fica so o "Adicionar ao meu calendario".
   var R=data.r||DEFAULT_R;
   var LSK='pharma_marcado_'+String(data.id||'');
-  function done(isoT,reaberto){
+  function done(isoT,reaberto,pend){
+    // pend = hora fora da grelha, sujeita a aprovação do Bruno: texto próprio e SEM botão de
+    // calendário (a marcação ainda não existe)
     var f=fmt(isoT);
-    var html='<div class="sent">✓ '+(reaberto?'Marcação já enviada':'Pedido enviado')+' — '+f.wd+', '+f.dm+' às '+f.hr+'. Confirmo consigo de seguida!</div>';
-    html+='<a class="btn cal" href="'+gcal(data.c,isoT)+'" target="_blank">📅 Adicionar ao meu calendário</a>';
+    var html='<div class="sent">✓ '+(reaberto?'Marcação já enviada':'Pedido enviado')+' — '+f.wd+', '+f.dm+' às '+f.hr+'. '+(pend?'Vou confirmar a disponibilidade e dou-lhe resposta em breve.':'Confirmo consigo de seguida!')+'</div>';
+    if(!pend)html+='<a class="btn cal" href="'+gcal(data.c,isoT)+'" target="_blank">📅 Adicionar ao meu calendário</a>';
     card.innerHTML=html;
   }
   // link já usado neste dispositivo → estado final direto, sem calendário (uso único; o relé
-  // descarta de qualquer forma um 2.º pedido com o mesmo id)
+  // descarta de qualquer forma um 2.º pedido com o mesmo id). Valor 'ap|<isoT>' = pedido
+  // pendente de confirmação → variante certa ao reabrir.
   var prev=data.id?lsGet(LSK):null;
-  if(prev){done(prev,true);return;}
-  // calendário 3 semanas (Seg–Sex) a partir da segunda da 1.ª semana com vaga
-  var start=parseD(dates[0]); var off=(start.getDay()+6)%7; start.setDate(start.getDate()-off);
+  if(prev){var pd=prev.indexOf('ap|')===0;done(pd?prev.slice(3):prev,true,pd);return;}
+  // calendário 3 semanas (Seg–Sex) a partir da segunda da 1.ª semana com vaga (oferecida ou alternativa)
+  var start=parseD((altDates.length&&altDates[0]<dates[0])?altDates[0]:dates[0]); var off=(start.getDay()+6)%7; start.setDate(start.getDate()-off);
   var cells=[]; for(var w=0;w<3;w++){for(var wd=0;wd<5;wd++){var dt=new Date(start);dt.setDate(dt.getDate()+w*7+wd);cells.push(isoOf(dt));}}
   var lastc=parseD(cells[cells.length-1]);
   var titulo=MES[start.getMonth()]+(start.getMonth()!==lastc.getMonth()?(' – '+MES[lastc.getMonth()]):'');
@@ -128,31 +152,52 @@ function render(){
   h+='<div class="dow">'+DOW.map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="grid">';
   cells.forEach(function(iso){var dt=parseD(iso);var num=dt.getDate();var mlbl=(num===1?('<small>'+MESc[dt.getMonth()]+'</small>'):'');
     if(byDate[iso]&&byDate[iso].starts.length)h+='<div class="cell avail dot" data-iso="'+iso+'">'+num+mlbl+'</div>';
+    else if(altDates.indexOf(iso)>=0)h+='<div class="cell" data-alt="'+iso+'">'+num+mlbl+'</div>';
     else h+='<div class="cell">'+num+mlbl+'</div>';});
-  h+='</div></div><div class="pane-times" id="times"><p class="hint">Escolha um dia para ver as horas disponíveis.</p></div></div>';
+  h+='</div>';
+  // dias alternativos: só ficam clicáveis (estilo .alt) depois do clique — uma vez, sem toggle;
+  // dias impossíveis nem sequer vêm no payload (sem mensagens de impossibilidade)
+  if(altDates.length)h+='<button class="altbtn" type="button">Nenhum destes dias dá jeito?</button>';
+  h+='</div><div class="pane-times" id="times"><p class="hint">Escolha um dia para ver as horas disponíveis.</p></div></div>';
   card.innerHTML=h;
   var timesEl=document.getElementById('times');
   card.querySelectorAll('.cell.avail').forEach(function(c){c.onclick=function(){pickDay(c.dataset.iso,c);};});
-  function pickDay(iso,cell){
+  card.querySelectorAll('.altbtn').forEach(function(b){b.onclick=function(){
+    b.style.display='none';
+    card.querySelectorAll('.cell').forEach(function(z){var ai=z.getAttribute&&z.getAttribute('data-alt');if(!ai)return;
+      z.classList.add('alt');z.onclick=function(){pickDay(ai,z);};});
+  };});
+  function pickDay(iso,cell,expand){
     card.querySelectorAll('.cell').forEach(function(z){z.classList.remove('sel');});
     cell.classList.add('sel');
-    var f=fmt(iso+'T00:00'); var day=byDate[iso];
+    var f=fmt(iso+'T00:00'); var day=byDate[iso]||altByDate[iso];
     var hh='<div class="times-h"><span class="th-wd">'+f.wd+'</span><span class="th-sep">, </span><span class="th-dm">'+f.dm+'</span></div>';
     hh+='<div class="slots">';
-    day.starts.slice().sort().forEach(function(t){hh+='<button class="chip" data-t="'+t+'">'+t.replace(':','h')+'</button>';});
+    // expand ("Prefere outra hora?"): junta exA (iguais às normais, fluxo automático) e exP
+    // (tracejadas, data-ap=1 → sujeitas a confirmação do Bruno), tudo por ordem cronológica
+    var chips=day.starts.map(function(t){return {t:t,ap:0};});
+    if(expand){day.exA.forEach(function(t){chips.push({t:t,ap:0});});day.exP.forEach(function(t){chips.push({t:t,ap:1});});}
+    chips.sort(function(a,b){return a.t<b.t?-1:(a.t>b.t?1:0);});
+    chips.forEach(function(c2){hh+='<button class="chip'+(c2.ap?' pend" data-ap="1':'')+'" data-t="'+c2.t+'">'+c2.t.replace(':','h')+'</button>';});
     hh+='</div>';
+    if(!expand&&(day.exA.length||day.exP.length))hh+='<button class="morebtn" type="button">Prefere outra hora?</button>';
+    if(expand&&day.exP.length)hh+='<div class="pend-note">Horas assinaladas: sujeitas a confirmação da nossa parte</div>';
     timesEl.innerHTML=hh;
     timesEl.querySelectorAll('.chip').forEach(function(b){b.onclick=function(){pickTime(iso,b);};});
+    timesEl.querySelectorAll('.morebtn').forEach(function(b){b.onclick=function(){pickDay(iso,cell,true);};});
     timesEl.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
   function pickTime(iso,btn){
     var isoT=iso+'T'+btn.dataset.t;
+    var ap=String(btn.dataset.ap||'')==='1';   // hora pendente (exP): o relé grava estado 'sugestao' em vez de 'pendente'
     var sent=false;
     // w = segredo de escrita do rele: vem no payload do link (nunca embutido nesta pagina, que e publica)
-    if(R){try{fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify({k:data.k||'',c:data.c||'',slot:isoT,id:data.id||(''+Date.now()),w:data.w||''})});sent=true;}catch(_){}}
+    var body={k:data.k||'',c:data.c||'',slot:isoT,id:data.id||(''+Date.now()),w:data.w||''};
+    if(ap)body.ap=1;
+    if(R){try{fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify(body)});sent=true;}catch(_){}}
     if(sent){
-      if(data.id)lsSet(LSK,isoT);
-      done(isoT,false);
+      if(data.id)lsSet(LSK,(ap?'ap|':'')+isoT);
+      done(isoT,false,ap);
       card.scrollIntoView({behavior:'smooth',block:'start'});
     }else{
       var f=fmt(isoT);
