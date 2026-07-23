@@ -52,7 +52,8 @@
     .grid,.dow{gap:5px}
     .grid{grid-auto-rows:minmax(60px,1fr)}
     .chip{padding:7px 5px;font-size:12.5px}
-    .times-h{font-size:14px}
+    .times-h{font-size:12.5px}
+    .times-h .th-wd{white-space:nowrap}
     .times-h .th-sep{display:none}
     .times-h .th-dm{display:block}
     .hint{margin-top:16px;font-size:13px}
@@ -133,7 +134,7 @@ function render(){
     card.querySelectorAll('.cell').forEach(function(z){z.classList.remove('sel');});
     cell.classList.add('sel');
     var f=fmt(iso+'T00:00'); var day=byDate[iso];
-    var hh='<div class="times-h">'+f.wd+'<span class="th-sep">, </span><span class="th-dm">'+f.dm+'</span></div>';
+    var hh='<div class="times-h"><span class="th-wd">'+f.wd+'</span><span class="th-sep">, </span><span class="th-dm">'+f.dm+'</span></div>';
     hh+='<div class="slots">';
     day.starts.slice().sort().forEach(function(t){hh+='<button class="chip" data-t="'+t+'">'+t.replace(':','h')+'</button>';});
     hh+='</div>';
