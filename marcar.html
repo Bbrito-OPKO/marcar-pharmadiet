@@ -12,49 +12,57 @@
   :root{--navy:#175FAA;--navy-d:#134F8E;--green:#87BA25;--green-d:#6f9a1e;--ink:#2B3441;--muted:#6C7889;--line:#E2E8F0;--bg:#F4F7FB}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink)}
-  .wrap{max-width:520px;margin:0 auto;padding:24px 16px 48px}
-  .brand{display:flex;align-items:center;gap:8px;font-weight:800;color:var(--navy);font-size:18px;margin-bottom:18px}
-  .brand .dot{width:12px;height:12px;border-radius:50%;background:var(--green)}
-  .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(20,40,70,.06);padding:22px 20px}
-  h1{font-size:19px;margin:0 0 6px}
-  .sub{color:var(--muted);font-size:14px;margin:0 0 16px;line-height:1.5}
-  .cal-h{font-weight:800;color:var(--navy);font-size:16px;text-transform:capitalize;margin-bottom:10px}
-  .dow{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:6px}
-  .dow span{text-align:center;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase}
-  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-  .cell{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;border-radius:12px;color:#C5CED9}
-  .cell small{font-size:9px;line-height:1;margin-top:1px;opacity:.8}
+  .wrap{max-width:900px;margin:0 auto;padding:24px 16px 48px}
+  .brand{display:flex;justify-content:center;margin-bottom:18px}
+  .brand img{height:46px;max-width:72vw;object-fit:contain}
+  .card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 28px rgba(20,40,70,.06);padding:24px 22px}
+  h1{font-size:20px;margin:0 0 18px}
+  .panes{display:grid;gap:22px;align-items:start}
+  .cal-h{font-weight:800;color:var(--navy);font-size:17px;text-transform:capitalize;margin-bottom:12px}
+  .dow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:8px}
+  .dow span{text-align:center;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase}
+  .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+  .cell{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px;border-radius:14px;color:#C5CED9}
+  .cell small{font-size:10px;line-height:1;margin-top:2px;opacity:.8}
   .cell.avail{background:#EAF2FB;color:var(--navy);font-weight:800;cursor:pointer;border:1.5px solid transparent;transition:.15s}
   .cell.avail:hover{border-color:#9CC0E8}
-  .cell.avail.dot::after{content:"";width:5px;height:5px;border-radius:50%;background:var(--green);margin-top:2px}
+  .cell.avail.dot::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);margin-top:3px}
   .cell.sel{background:var(--navy);color:#fff}
   .cell.sel.dot::after{background:#fff}
-  .times{margin-top:16px;border-top:1px solid var(--line);padding-top:14px;display:none}
-  .times.show{display:block}
-  .times-h{font-weight:800;color:var(--navy);font-size:15px;text-transform:capitalize;margin-bottom:10px}
-  .busy{background:#F1F4F8;color:#8A96A6;border:1px dashed var(--line);border-radius:10px;padding:7px 12px;margin-bottom:8px;font-size:13px;font-weight:600}
-  .chips{display:flex;flex-wrap:wrap;gap:8px}
-  .chip{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:9px 18px;font-size:15px;font-weight:800;color:var(--navy);cursor:pointer;transition:.15s}
+  .back{display:inline-flex;align-items:center;gap:6px;border:none;background:none;color:var(--navy);font-size:14px;font-weight:800;cursor:pointer;padding:0;margin:0 0 12px}
+  .times-h{font-weight:800;color:var(--navy);font-size:16px;text-transform:capitalize;margin-bottom:4px}
+  .dur{color:var(--muted);font-size:13.5px;font-weight:600;margin:0 0 14px}
+  .hint{color:var(--muted);font-size:14px;line-height:1.5;margin-top:36px;text-align:center}
+  .slots{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .chip{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:12px 8px;font-size:15px;font-weight:800;color:var(--navy);cursor:pointer;transition:.15s;text-align:center}
   .chip:hover{border-color:#9CC0E8;background:#F3F8FF}
   .chip.sel{border-color:var(--navy);background:var(--navy);color:#fff}
-  .confirm{margin-top:14px;display:none}
-  .confirm.show{display:block}
-  .confirm p{font-size:14px;color:var(--ink);margin:6px 0 12px;line-height:1.5}
   .sent{background:var(--green);color:#fff;border:2px solid var(--green-d);border-radius:14px;padding:14px 16px;font-size:15px;font-weight:800;line-height:1.45;margin:6px 0 12px;text-align:center}
+  .warn{font-size:14px;color:var(--ink);margin:6px 0 12px;line-height:1.5}
   .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;text-decoration:none;color:#fff}
   .btn.cal{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
   .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
   .err{color:#C0392B;font-size:14px}
+  @media(min-width:760px){
+    .panes{grid-template-columns:1.35fr 1fr}
+    .pane-times{border-left:1px solid var(--line);padding-left:22px;min-height:340px}
+    .back{display:none}
+  }
+  @media(max-width:759.98px){
+    .card.show-times .pane-cal{display:none}
+    .card:not(.show-times) .pane-times{display:none}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="brand"><span class="dot"></span> Pharmadiet Veterinary</div>
+  <div class="brand"><img src="data:image/png;base64,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" alt="Pharmadiet Veterinary"></div>
   <div class="card" id="card"><p class="err">A carregar…</p></div>
   <div class="foot">Marcação de visita comercial · Pharmadiet</div>
 </div>
 <script>
 var DEFAULT_R='https://script.google.com/macros/s/AKfycbzedS0F01jmcMy-mLf4deECfyUr5feSak9e1M5NHlccfUU4dC1dpwNxmg722aRKjBej7g/exec';
+var DUR_MIN=30;   // duração da reunião mostrada ao cliente e usada no "Adicionar ao calendário"
 var WD=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
 var DOW=['Seg','Ter','Qua','Qui','Sex'];
 var MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
@@ -62,68 +70,90 @@ var MESc=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez
 function dec(q){if(!q)return null;try{return JSON.parse(decodeURIComponent(escape(atob(q))));}catch(e){try{return JSON.parse(decodeURIComponent(q));}catch(_){return null;}}}
 function parseD(iso){var d=iso.slice(0,10).split('-');return new Date(+d[0],+d[1]-1,+d[2]);}
 function isoOf(dt){return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);}
+function m2h(m){var H=Math.floor(m/60),M=m%60;return (H<10?'0':'')+H+':'+(M<10?'0':'')+M;}
 function fmt(iso){var p=iso.split('T');var dt=parseD(p[0]);return {wd:WD[dt.getDay()],dm:p[0].split('-')[2]+'/'+p[0].split('-')[1],hr:(p[1]||'10:00').replace(':00','h').replace(':','h'),date:p[0],time:(p[1]||'10:00')};}
-function gcal(c,iso){var p=iso.split('T');var d=p[0].replace(/-/g,'');var t=(p[1]||'10:00');var hh=(+t.split(':')[0]);var mm=t.split(':')[1];var s=d+'T'+t.replace(':','')+'00';var e=d+'T'+String(hh+1)+mm+'00';var txt='Visita Pharmadiet'+(c?(' — '+c):'');return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(txt)+'&dates='+s+'/'+e;}
+function gcal(c,iso){var p=iso.split('T');var d=p[0].replace(/-/g,'');var t=(p[1]||'10:00');var ini=(+t.split(':')[0])*60+(+t.split(':')[1]);var fim=ini+DUR_MIN;var s=d+'T'+t.replace(':','')+'00';var e=d+'T'+m2h(fim).replace(':','')+'00';var txt='Visita Pharmadiet'+(c?(' — '+c):'');return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(txt)+'&dates='+s+'/'+e;}
+function lsGet(k){try{return localStorage.getItem(k);}catch(_){return null;}}
+function lsSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}
 function render(){
   var card=document.getElementById('card');
   var data=dec(new URLSearchParams(location.search).get('q'));
-  // byDate = {iso:{starts:['HH:MM'…], busy:[[iníM,fimM]…]}}.
-  // Formato novo: d[[offset,[horas],[[bs,be]]]]. Suporta o antigo (máscara) e ?s legado.
-  // Em pr[1]: >=24 = minutos desde a meia-noite (ex. 850 = 14:10, horas flexíveis);
-  // <24 = hora inteira (links gerados antes de 2026-07-18, ex. 10 = 10:00).
+  // byDate = {iso:{starts:['HH:MM'…]}}.
+  // Formato: d[[offset,[horas],[[bs,be]]]]. Suporta o antigo (máscara) e ?s legado.
+  // Em pr[1]: >=24 = minutos desde a meia-noite (ex. 850 = 14:10); <24 = hora inteira
+  // (links gerados antes de 2026-07-18, ex. 10 = 10:00). O 3.º elemento (ocupados) dos
+  // links antigos é ignorado — a grelha enviada já reflete a agenda e a página não deve
+  // expor as marcações do calendário (decisão de segurança 2026-07-23).
   var byDate={};
   if(data&&data.d&&data.b){ var base=parseD(data.b); var HRSm=['10:00','11:15','12:30','15:00','16:15'];
-    data.d.forEach(function(pr){var dt=new Date(base);dt.setDate(dt.getDate()+pr[0]);var iso=isoOf(dt);var st=[],bz=[];
-      if(Object.prototype.toString.call(pr[1])==='[object Array]'){pr[1].forEach(function(v){st.push(m2h(v<24?v*60:v));});bz=pr[2]||[];}
+    data.d.forEach(function(pr){var dt=new Date(base);dt.setDate(dt.getDate()+pr[0]);var iso=isoOf(dt);var st=[];
+      if(Object.prototype.toString.call(pr[1])==='[object Array]'){pr[1].forEach(function(v){st.push(m2h(v<24?v*60:v));});}
       else{for(var i=0;i<HRSm.length;i++){if(pr[1]&(1<<i))st.push(HRSm[i]);}}
-      byDate[iso]={starts:st,busy:bz};});
-  } else if(data&&data.s&&data.s.length){ data.s.forEach(function(iso){var dd=iso.slice(0,10),tt=iso.split('T')[1]||'10:00';(byDate[dd]=byDate[dd]||{starts:[],busy:[]}).starts.push(tt);}); }
+      byDate[iso]={starts:st};});
+  } else if(data&&data.s&&data.s.length){ data.s.forEach(function(iso){var dd=iso.slice(0,10),tt=iso.split('T')[1]||'10:00';(byDate[dd]=byDate[dd]||{starts:[]}).starts.push(tt);}); }
   var dates=Object.keys(byDate).filter(function(k){return byDate[k].starts.length;}).sort();
-  if(!dates.length){card.innerHTML='<h1>Link inválido</h1><p class="sub">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
+  if(!dates.length){card.innerHTML='<h1>Link inválido</h1><p class="warn">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
   // (2026-07-22, decisao do Bruno) os botoes "Confirmar por WhatsApp/email" foram removidos:
   // o rele + confirmacao automatica fecham o ciclo; fica so o "Adicionar ao meu calendario".
   var R=data.r||DEFAULT_R;
-  function m2h(m){var H=Math.floor(m/60),M=m%60;return (H<10?'0':'')+H+':'+(M<10?'0':'')+M;}
+  var LSK='pharma_marcado_'+String(data.id||'');
+  function done(isoT,reaberto){
+    var f=fmt(isoT);
+    var html='<div class="sent">✓ '+(reaberto?'Marcação já enviada':'Pedido enviado')+' — '+f.wd+', '+f.dm+' às '+f.hr+'. Confirmo consigo de seguida!</div>';
+    html+='<a class="btn cal" href="'+gcal(data.c,isoT)+'" target="_blank">📅 Adicionar ao meu calendário</a>';
+    card.innerHTML=html;
+  }
+  // link já usado neste dispositivo → estado final direto, sem calendário (uso único; o relé
+  // descarta de qualquer forma um 2.º pedido com o mesmo id)
+  var prev=data.id?lsGet(LSK):null;
+  if(prev){done(prev,true);return;}
   // calendário 3 semanas (Seg–Sex) a partir da segunda da 1.ª semana com vaga
   var start=parseD(dates[0]); var off=(start.getDay()+6)%7; start.setDate(start.getDate()-off);
   var cells=[]; for(var w=0;w<3;w++){for(var wd=0;wd<5;wd++){var dt=new Date(start);dt.setDate(dt.getDate()+w*7+wd);cells.push(isoOf(dt));}}
   var lastc=parseD(cells[cells.length-1]);
   var titulo=MES[start.getMonth()]+(start.getMonth()!==lastc.getMonth()?(' – '+MES[lastc.getMonth()]):'')+' '+lastc.getFullYear();
-  var h='<h1>Olá! 👋</h1><p class="sub">Escolha o dia para a visita da Pharmadiet:</p>';
+  var h='<h1>Olá! 👋 Escolha o dia</h1>';
+  h+='<div class="panes"><div class="pane-cal">';
   h+='<div class="cal-h">'+titulo+'</div>';
   h+='<div class="dow">'+DOW.map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="grid">';
   cells.forEach(function(iso){var dt=parseD(iso);var num=dt.getDate();var mlbl=(num===1?('<small>'+MESc[dt.getMonth()]+'</small>'):'');
     if(byDate[iso]&&byDate[iso].starts.length)h+='<div class="cell avail dot" data-iso="'+iso+'">'+num+mlbl+'</div>';
     else h+='<div class="cell">'+num+mlbl+'</div>';});
-  h+='</div><div class="times" id="times"></div><div class="confirm" id="cf"></div>';
+  h+='</div></div><div class="pane-times" id="times"><p class="hint">Escolha um dia para ver as horas disponíveis.</p></div></div>';
   card.innerHTML=h;
-  var timesEl=document.getElementById('times'), cfEl=document.getElementById('cf');
+  var timesEl=document.getElementById('times');
   card.querySelectorAll('.cell.avail').forEach(function(c){c.onclick=function(){pickDay(c.dataset.iso,c);};});
   function pickDay(iso,cell){
     card.querySelectorAll('.cell').forEach(function(z){z.classList.remove('sel');});
-    cell.classList.add('sel'); cfEl.classList.remove('show');cfEl.innerHTML='';
+    cell.classList.add('sel');
     var f=fmt(iso+'T00:00'); var day=byDate[iso];
-    var hh='<div class="times-h">'+f.wd+', '+f.dm+'</div>';
-    (day.busy||[]).slice().sort(function(a,b){return a[0]-b[0];}).forEach(function(b){hh+='<div class="busy">Ocupado '+m2h(b[0])+'–'+m2h(b[1])+'</div>';});
-    hh+='<div class="chips">';
-    day.starts.slice().sort().forEach(function(t){hh+='<button class="chip" data-t="'+t+'">'+t.replace(':00','h').replace(':','h')+'</button>';});
+    var hh='<button class="back" id="back">← Voltar ao calendário</button>';
+    hh+='<div class="times-h">'+f.wd+', '+f.dm+'</div>';
+    hh+='<div class="dur">Reunião de '+DUR_MIN+' minutos</div>';
+    hh+='<div class="slots">';
+    day.starts.slice().sort().forEach(function(t){hh+='<button class="chip" data-t="'+t+'">'+t.replace(':','h')+'</button>';});
     hh+='</div>';
-    timesEl.innerHTML=hh;timesEl.classList.add('show');
+    timesEl.innerHTML=hh;
+    card.classList.add('show-times');
+    var bk=document.getElementById('back');
+    if(bk)bk.onclick=function(){card.classList.remove('show-times');card.querySelectorAll('.cell').forEach(function(z){z.classList.remove('sel');});timesEl.innerHTML='<p class="hint">Escolha um dia para ver as horas disponíveis.</p>';};
     timesEl.querySelectorAll('.chip').forEach(function(b){b.onclick=function(){pickTime(iso,b);};});
     timesEl.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
   function pickTime(iso,btn){
-    timesEl.querySelectorAll('.chip').forEach(function(z){z.classList.remove('sel');});
-    btn.classList.add('sel');
-    var isoT=iso+'T'+btn.dataset.t; var f=fmt(isoT);
+    var isoT=iso+'T'+btn.dataset.t;
     var sent=false;
     // w = segredo de escrita do rele: vem no payload do link (nunca embutido nesta pagina, que e publica)
     if(R){try{fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify({k:data.k||'',c:data.c||'',slot:isoT,id:data.id||(''+Date.now()),w:data.w||''})});sent=true;}catch(_){}}
-    var html=sent
-      ?'<div class="sent">✓ Pedido enviado — '+f.wd+', '+f.dm+' às '+f.hr+'. Confirmo consigo de seguida!</div>'
-      :'<p>Escolheu <b>'+f.wd+', '+f.dm+' às '+f.hr+'</b>, mas não foi possível enviar o pedido — por favor responda diretamente à mensagem que recebeu.</p>';
-    html+='<a class="btn cal" href="'+gcal(data.c,isoT)+'" target="_blank">📅 Adicionar ao meu calendário</a>';
-    cfEl.innerHTML=html;cfEl.classList.add('show');cfEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+    if(sent){
+      if(data.id)lsSet(LSK,isoT);
+      done(isoT,false);
+      card.scrollIntoView({behavior:'smooth',block:'start'});
+    }else{
+      var f=fmt(isoT);
+      card.innerHTML='<p class="warn">Escolheu <b>'+f.wd+', '+f.dm+' às '+f.hr+'</b>, mas não foi possível enviar o pedido — por favor responda diretamente à mensagem que recebeu.</p>'
+        +'<a class="btn cal" href="'+gcal(data.c,isoT)+'" target="_blank">📅 Adicionar ao meu calendário</a>';
+    }
   }
 }
 render();
