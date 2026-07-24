@@ -140,9 +140,9 @@ function render(){
   // pendente de confirmação → variante certa ao reabrir.
   var prev=data.id?lsGet(LSK):null;
   if(prev){var pd=prev.indexOf('ap|')===0;done(pd?prev.slice(3):prev,true,pd);return;}
-  // calendário 3 semanas (Seg–Sex) a partir da segunda da 1.ª semana com vaga (oferecida ou alternativa)
+  // calendário 4 semanas (Seg–Sex) a partir da segunda da 1.ª semana com vaga (oferecida ou alternativa)
   var start=parseD((altDates.length&&altDates[0]<dates[0])?altDates[0]:dates[0]); var off=(start.getDay()+6)%7; start.setDate(start.getDate()-off);
-  var cells=[]; for(var w=0;w<3;w++){for(var wd=0;wd<5;wd++){var dt=new Date(start);dt.setDate(dt.getDate()+w*7+wd);cells.push(isoOf(dt));}}
+  var cells=[]; for(var w=0;w<4;w++){for(var wd=0;wd<5;wd++){var dt=new Date(start);dt.setDate(dt.getDate()+w*7+wd);cells.push(isoOf(dt));}}
   var lastc=parseD(cells[cells.length-1]);
   var titulo=MES[start.getMonth()]+(start.getMonth()!==lastc.getMonth()?(' – '+MES[lastc.getMonth()]):'');
   var h='<div class="panes">';
