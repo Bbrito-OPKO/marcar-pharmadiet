@@ -45,7 +45,9 @@
   .chip.pend.sel{border-style:solid}
   .pend-note{color:var(--muted);font-size:11px;line-height:1.4;margin-top:6px;text-align:center;max-width:170px}
   /* passo de confirmacao (2026-07-27): o chip so SELECIONA, e este botao e que envia */
-  .confbtn{display:block;width:100%;margin-top:10px;border:none;border-radius:12px;padding:11px 10px;font-size:13.5px;font-weight:800;color:#fff;background:var(--green);cursor:pointer;line-height:1.35;transition:.15s;animation:confin .18s ease-out}
+  /* max-width 170px pela MESMA razão do .hint/.pend-note: a coluna das horas é max-content e o
+     texto do botão, sem cap, esticava o card inteiro (medido: 484px de scroll a 320px de ecrã) */
+  .confbtn{display:block;width:100%;max-width:170px;margin-top:10px;border:none;border-radius:12px;padding:11px 10px;font-size:13.5px;font-weight:800;color:#fff;background:var(--green);cursor:pointer;line-height:1.35;transition:.15s;animation:confin .18s ease-out}
   .confbtn:hover{background:var(--green-d)}
   .confbtn.pend{background:var(--navy)}
   .confbtn.pend:hover{background:var(--navy-d)}
@@ -67,7 +69,7 @@
   .err{color:#C0392B;font-size:14px}
   @media(max-width:759.98px){
     .panes{gap:0 12px;min-height:300px}
-    h1{font-size:14px;margin-bottom:14px}
+    h1{font-size:13px;margin-bottom:14px}   /* 14px foi testado e TRANSBORDA a 320px (o h1 é nowrap e puxa a coluna do calendário) */
     .pane-times{padding:0 12px}
     .cell{font-size:14px;border-radius:10px}
     .cell.today{border-radius:10px}
@@ -76,7 +78,7 @@
     .grid,.dow{gap:5px}
     .grid{grid-auto-rows:minmax(64px,1fr)}
     .chip{padding:7px 5px;font-size:12.5px;min-height:40px;display:flex;align-items:center;justify-content:center}
-    .confbtn{min-height:40px;font-size:12.5px;padding:9px 8px;margin-top:8px}
+    .confbtn{min-height:40px;font-size:12.5px;padding:9px 8px;margin-top:8px;max-width:140px}
     .senderr{font-size:11px;max-width:140px}
     .altbtn{font-size:11px;padding:6px 8px}
     .morebtn{font-size:10.5px;padding:6px 5px}
