@@ -34,6 +34,7 @@
   .cell.sel{background:var(--navy);color:#fff}
   .cell.sel.dot::after{background:#fff}
   .cell.alt.sel{background:var(--navy);color:#fff;border-style:solid}
+  .cell.today{box-shadow:inset 0 0 0 1.5px #B9D3EE;border-radius:14px}
   .times-h{font-weight:800;color:var(--navy);font-size:16px;text-transform:capitalize;margin-bottom:12px;text-align:center;white-space:nowrap}
   .hint{color:var(--muted);font-size:14px;line-height:1.5;margin-top:36px;text-align:center;max-width:170px}
   .slots{display:flex;flex-direction:column;gap:6px}
@@ -43,6 +44,17 @@
   .chip.pend{border-style:dashed}
   .chip.pend.sel{border-style:solid}
   .pend-note{color:var(--muted);font-size:11px;line-height:1.4;margin-top:6px;text-align:center;max-width:170px}
+  /* passo de confirmacao (2026-07-27): o chip so SELECIONA, e este botao e que envia */
+  .confbtn{display:block;width:100%;margin-top:10px;border:none;border-radius:12px;padding:11px 10px;font-size:13.5px;font-weight:800;color:#fff;background:var(--green);cursor:pointer;line-height:1.35;transition:.15s;animation:confin .18s ease-out}
+  .confbtn:hover{background:var(--green-d)}
+  .confbtn.pend{background:var(--navy)}
+  .confbtn.pend:hover{background:var(--navy-d)}
+  .confbtn[disabled]{opacity:.6;cursor:default}
+  .confbtn:active,.chip:active,.cell.avail:active,.cell.alt:active{transform:scale(.98)}
+  .busy::after{content:"";animation:dots 1.2s steps(1,end) infinite}
+  @keyframes dots{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+  @keyframes confin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .senderr{color:#C0392B;font-size:12px;line-height:1.45;margin-top:10px;text-align:center;max-width:170px}
   .altbtn,.morebtn{background:#fff;border:1.5px dashed var(--line);border-radius:10px;padding:8px 10px;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer;transition:.15s}
   .altbtn{margin-top:10px}
   .morebtn{margin-top:6px;padding:7px 6px;font-size:12px}
@@ -55,14 +67,17 @@
   .err{color:#C0392B;font-size:14px}
   @media(max-width:759.98px){
     .panes{gap:0 12px;min-height:300px}
-    h1{font-size:13px;margin-bottom:14px}
+    h1{font-size:14px;margin-bottom:14px}
     .pane-times{padding:0 12px}
     .cell{font-size:14px;border-radius:10px}
+    .cell.today{border-radius:10px}
     .cell small{font-size:9px}
     .dow span{font-size:10px}
     .grid,.dow{gap:5px}
-    .grid{grid-auto-rows:minmax(60px,1fr)}
-    .chip{padding:7px 5px;font-size:12.5px}
+    .grid{grid-auto-rows:minmax(64px,1fr)}
+    .chip{padding:7px 5px;font-size:12.5px;min-height:40px;display:flex;align-items:center;justify-content:center}
+    .confbtn{min-height:40px;font-size:12.5px;padding:9px 8px;margin-top:8px}
+    .senderr{font-size:11px;max-width:140px}
     .altbtn{font-size:11px;padding:6px 8px}
     .morebtn{font-size:10.5px;padding:6px 5px}
     .pend-note{font-size:9.5px;max-width:140px}
@@ -85,6 +100,7 @@
 <script>
 var DEFAULT_R='https://script.google.com/macros/s/AKfycbzedS0F01jmcMy-mLf4deECfyUr5feSak9e1M5NHlccfUU4dC1dpwNxmg722aRKjBej7g/exec';
 var DUR_MIN=30;   // duração da reunião mostrada ao cliente e usada no "Adicionar ao calendário"
+var SID='';       // id do pedido: gerado UMA vez por render (o relé dedupa por id → retry não duplica)
 var WD=['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
 var DOW=['Seg','Ter','Qua','Qui','Sex'];
 var MES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
@@ -94,7 +110,17 @@ function parseD(iso){var d=iso.slice(0,10).split('-');return new Date(+d[0],+d[1
 function isoOf(dt){return dt.getFullYear()+'-'+('0'+(dt.getMonth()+1)).slice(-2)+'-'+('0'+dt.getDate()).slice(-2);}
 function m2h(m){var H=Math.floor(m/60),M=m%60;return (H<10?'0':'')+H+':'+(M<10?'0':'')+M;}
 function fmt(iso){var p=iso.split('T');var dt=parseD(p[0]);return {wd:WD[dt.getDay()],dm:p[0].split('-')[2]+'/'+p[0].split('-')[1],hr:(p[1]||'10:00').replace(':00','h').replace(':','h'),date:p[0],time:(p[1]||'10:00')};}
-function gcal(c,iso){var p=iso.split('T');var d=p[0].replace(/-/g,'');var t=(p[1]||'10:00');var ini=(+t.split(':')[0])*60+(+t.split(':')[1]);var fim=ini+DUR_MIN;var s=d+'T'+t.replace(':','')+'00';var e=d+'T'+m2h(fim).replace(':','')+'00';var txt='Visita Pharmadiet'+(c?(' — '+c):'');return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(txt)+'&dates='+s+'/'+e;}
+// .ics unico (2026-07-27, decisao do Bruno): substitui o link do Google Calendar — importa em
+// iPhone/Outlook/Google. Horas FLUTUANTES (sem Z/timezone): o evento fica na hora local de quem
+// abre, que e a hora da visita. Blob primario (melhor no Safari do iPhone), data URI em fallback
+// por feature-test (e tambem o caminho dos sandboxes dos testes, sem Blob/URL).
+function icsEsc(s){return String(s).replace(/([\\;,])/g,'\\$1').replace(/\n/g,'\\n');}
+function icsHref(c,isoT){var p=isoT.split('T');var d=p[0].replace(/-/g,'');var t=(p[1]||'10:00');
+  var ini=(+t.split(':')[0])*60+(+t.split(':')[1]);var fim=ini+DUR_MIN;
+  var s=d+'T'+t.replace(':','')+'00';var e=d+'T'+m2h(fim).replace(':','')+'00';
+  var txt=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Pharmadiet Veterinary//Marcacoes//PT','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT','UID:'+SID+'@pharmadiet','DTSTAMP:'+s,'DTSTART:'+s,'DTEND:'+e,'SUMMARY:'+icsEsc('Visita Pharmadiet'+(c?(' — '+c):'')),'END:VEVENT','END:VCALENDAR'].join('\r\n');
+  try{if(typeof Blob!=='undefined'&&typeof URL!=='undefined'&&URL.createObjectURL)return URL.createObjectURL(new Blob([txt],{type:'text/calendar;charset=utf-8'}));}catch(_){}
+  return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(txt);}
 function lsGet(k){try{return localStorage.getItem(k);}catch(_){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}
 function render(){
@@ -127,12 +153,14 @@ function render(){
   // o rele + confirmacao automatica fecham o ciclo; fica so o "Adicionar ao meu calendario".
   var R=data.r||DEFAULT_R;
   var LSK='pharma_marcado_'+String(data.id||'');
+  SID=String(data.id||(''+Date.now()));   // UMA vez por render: o retry reenvia o MESMO id
+  var _sending=false;                     // guard de duplo clique (o botão também fica disabled)
   function done(isoT,reaberto,pend){
     // pend = hora fora da grelha, sujeita a aprovação do Bruno: texto próprio e SEM botão de
     // calendário (a marcação ainda não existe)
     var f=fmt(isoT);
     var html='<div class="sent">✓ '+(reaberto?'Marcação já enviada':'Pedido enviado')+' — '+f.wd+', '+f.dm+' às '+f.hr+'. '+(pend?'Vou confirmar a disponibilidade e dou-lhe resposta em breve.':'Confirmo consigo de seguida!')+'</div>';
-    if(!pend)html+='<a class="btn cal" href="'+gcal(data.c,isoT)+'" target="_blank">📅 Adicionar ao meu calendário</a>';
+    if(!pend)html+='<a class="btn cal" download="visita-pharmadiet.ics" href="'+icsHref(data.c,isoT)+'">📅 Adicionar ao meu calendário</a>';
     card.innerHTML=html;
   }
   // link já usado neste dispositivo → estado final direto, sem calendário (uso único; o relé
@@ -151,9 +179,10 @@ function render(){
   h+='<div class="cal-h">'+titulo+'</div>';
   h+='<div class="dow">'+DOW.map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="grid">';
   cells.forEach(function(iso){var dt=parseD(iso);var num=dt.getDate();var mlbl=(num===1?('<small>'+MESc[dt.getMonth()]+'</small>'):'');
-    if(byDate[iso]&&byDate[iso].starts.length)h+='<div class="cell avail dot" data-iso="'+iso+'">'+num+mlbl+'</div>';
-    else if(altDates.indexOf(iso)>=0)h+='<div class="cell" data-alt="'+iso+'">'+num+mlbl+'</div>';
-    else h+='<div class="cell">'+num+mlbl+'</div>';});
+    var td=(iso===isoOf(new Date()))?' today':'';   // marca do dia de hoje (sempre no FIM da lista de classes)
+    if(byDate[iso]&&byDate[iso].starts.length)h+='<div class="cell avail dot'+td+'" data-iso="'+iso+'">'+num+mlbl+'</div>';
+    else if(altDates.indexOf(iso)>=0)h+='<div class="cell'+td+'" data-alt="'+iso+'">'+num+mlbl+'</div>';
+    else h+='<div class="cell'+td+'">'+num+mlbl+'</div>';});
   h+='</div>';
   // dias alternativos: só ficam clicáveis (estilo .alt) depois do clique — uma vez, sem toggle;
   // dias impossíveis nem sequer vêm no payload (sem mensagens de impossibilidade)
@@ -167,43 +196,62 @@ function render(){
     card.querySelectorAll('.cell').forEach(function(z){var ai=z.getAttribute&&z.getAttribute('data-alt');if(!ai)return;
       z.classList.add('alt');z.onclick=function(){pickDay(ai,z);};});
   };});
+  // O clique num chip SELECIONA (2026-07-27) — envia só o botão de confirmação por baixo. Um toque
+  // acidental no telemóvel deixou de fazer uma marcação. Estado por painel de dia (selT/selAp/
+  // errState) + draw() a re-renderizar o painel inteiro, no estilo do resto da página. Expandir
+  // "Prefere outra hora?" abre um closure novo → perde a seleção (aceite).
   function pickDay(iso,cell,expand){
     card.querySelectorAll('.cell').forEach(function(z){z.classList.remove('sel');});
     cell.classList.add('sel');
     var f=fmt(iso+'T00:00'); var day=byDate[iso]||altByDate[iso];
-    var hh='<div class="times-h"><span class="th-wd">'+f.wd+'</span><span class="th-sep">, </span><span class="th-dm">'+f.dm+'</span></div>';
-    hh+='<div class="slots">';
-    // expand ("Prefere outra hora?"): junta exA (iguais às normais, fluxo automático) e exP
-    // (tracejadas, data-ap=1 → sujeitas a confirmação do Bruno), tudo por ordem cronológica
-    var chips=day.starts.map(function(t){return {t:t,ap:0};});
-    if(expand){day.exA.forEach(function(t){chips.push({t:t,ap:0});});day.exP.forEach(function(t){chips.push({t:t,ap:1});});}
-    chips.sort(function(a,b){return a.t<b.t?-1:(a.t>b.t?1:0);});
-    chips.forEach(function(c2){hh+='<button class="chip'+(c2.ap?' pend" data-ap="1':'')+'" data-t="'+c2.t+'">'+c2.t.replace(':','h')+'</button>';});
-    hh+='</div>';
-    if(!expand&&(day.exA.length||day.exP.length))hh+='<button class="morebtn" type="button">Prefere outra hora?</button>';
-    if(expand&&day.exP.length)hh+='<div class="pend-note">Horas assinaladas: sujeitas a confirmação da nossa parte</div>';
-    timesEl.innerHTML=hh;
-    timesEl.querySelectorAll('.chip').forEach(function(b){b.onclick=function(){pickTime(iso,b);};});
-    timesEl.querySelectorAll('.morebtn').forEach(function(b){b.onclick=function(){pickDay(iso,cell,true);};});
-    timesEl.scrollIntoView({behavior:'smooth',block:'nearest'});
-  }
-  function pickTime(iso,btn){
-    var isoT=iso+'T'+btn.dataset.t;
-    var ap=String(btn.dataset.ap||'')==='1';   // hora pendente (exP): o relé grava estado 'sugestao' em vez de 'pendente'
-    var sent=false;
-    // w = segredo de escrita do rele: vem no payload do link (nunca embutido nesta pagina, que e publica)
-    var body={k:data.k||'',c:data.c||'',slot:isoT,id:data.id||(''+Date.now()),w:data.w||''};
-    if(ap)body.ap=1;
-    if(R){try{fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify(body)});sent=true;}catch(_){}}
-    if(sent){
-      if(data.id)lsSet(LSK,(ap?'ap|':'')+isoT);
-      done(isoT,false,ap);
-      card.scrollIntoView({behavior:'smooth',block:'start'});
-    }else{
-      var f=fmt(isoT);
-      card.innerHTML='<p class="warn">Escolheu <b>'+f.wd+', '+f.dm+' às '+f.hr+'</b>, mas não foi possível enviar o pedido — por favor responda diretamente à mensagem que recebeu.</p>'
-        +'<a class="btn cal" href="'+gcal(data.c,isoT)+'" target="_blank">📅 Adicionar ao meu calendário</a>';
+    var selT=null,selAp=0,errState=false,first=true;
+    function draw(){
+      var hh='<div class="times-h"><span class="th-wd">'+f.wd+'</span><span class="th-sep">, </span><span class="th-dm">'+f.dm+'</span></div>';
+      hh+='<div class="slots">';
+      // expand ("Prefere outra hora?"): junta exA (iguais às normais, fluxo automático) e exP
+      // (tracejadas, data-ap=1 → sujeitas a confirmação do Bruno), tudo por ordem cronológica
+      var chips=day.starts.map(function(t){return {t:t,ap:0};});
+      if(expand){day.exA.forEach(function(t){chips.push({t:t,ap:0});});day.exP.forEach(function(t){chips.push({t:t,ap:1});});}
+      chips.sort(function(a,b){return a.t<b.t?-1:(a.t>b.t?1:0);});
+      chips.forEach(function(c2){hh+='<button class="chip'+(c2.ap?' pend':'')+(c2.t===selT?' sel':'')+'" data-t="'+c2.t+'"'+(c2.ap?' data-ap="1"':'')+'>'+c2.t.replace(':','h')+'</button>';});
+      hh+='</div>';
+      if(!expand&&(day.exA.length||day.exP.length))hh+='<button class="morebtn" type="button">Prefere outra hora?</button>';
+      if(expand&&day.exP.length)hh+='<div class="pend-note">Horas assinaladas: sujeitas a confirmação da nossa parte</div>';
+      if(errState){
+        hh+='<div class="senderr">Não foi possível enviar o pedido. Verifique a ligação e tente de novo — ou responda diretamente à mensagem que recebeu.</div>'
+          +'<button class="confbtn'+(selAp?' pend':'')+'" type="button" data-t="'+selT+'"'+(selAp?' data-ap="1"':'')+'>Tentar novamente</button>';
+      }else if(selT){
+        var fs=fmt(iso+'T'+selT);
+        hh+='<button class="confbtn'+(selAp?' pend':'')+'" type="button" data-t="'+selT+'"'+(selAp?' data-ap="1"':'')+'>'
+          +(selAp?'Pedir esta hora':'Confirmar')+' — '+fs.wd.slice(0,3)+', '+fs.dm+' às '+fs.hr+(selAp?' (sujeita a confirmação)':'')+'</button>';
+      }
+      timesEl.innerHTML=hh;
+      timesEl.querySelectorAll('.chip').forEach(function(b){b.onclick=function(){selT=b.dataset.t;selAp=String(b.dataset.ap||'')==='1'?1:0;errState=false;draw();};});
+      timesEl.querySelectorAll('.morebtn').forEach(function(b){b.onclick=function(){pickDay(iso,cell,true);};});
+      timesEl.querySelectorAll('.confbtn').forEach(function(b){b.onclick=function(){enviar(iso+'T'+selT,selAp,b);};});
+      if(first){first=false;timesEl.scrollIntoView({behavior:'smooth',block:'nearest'});}
     }
+    // Envio fiável: só se considera enviado quando o fetch RESOLVE (resposta opaca do no-cors).
+    // O try/catch síncrono anterior dava "Pedido enviado" com a rede em baixo — a promise rejeitava
+    // depois, em silêncio, e o pedido nunca chegava ao relé.
+    function enviar(isoT,ap,btnEl){
+      if(_sending)return; _sending=true;
+      if(btnEl){btnEl.disabled=true;btnEl.className='confbtn'+(ap?' pend':'')+' busy';btnEl.innerHTML='A enviar';}
+      // w = segredo de escrita do rele: vem no payload do link (nunca embutido nesta pagina, que e publica)
+      var body={k:data.k||'',c:data.c||'',slot:isoT,id:SID,w:data.w||''};
+      if(ap)body.ap=1;
+      var p; try{p=fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify(body)});}catch(e){p=Promise.reject(e);}
+      var tm; var lim=new Promise(function(_,rej){tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
+      Promise.race([p,lim]).then(function(){
+        clearTimeout(tm); _sending=false;
+        if(data.id)lsSet(LSK,(ap?'ap|':'')+isoT);
+        done(isoT,false,!!ap);
+        card.scrollIntoView({behavior:'smooth',block:'start'});
+      },function(){
+        clearTimeout(tm); _sending=false; errState=true; draw();
+      });
+    }
+    draw();
   }
 }
 render();
