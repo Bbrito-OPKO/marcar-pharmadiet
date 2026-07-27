@@ -44,6 +44,13 @@
   .chip.pend{border-style:dashed}
   .chip.pend.sel{border-style:solid}
   .pend-note{color:var(--muted);font-size:11px;line-height:1.4;margin-top:6px;text-align:center;max-width:170px}
+  /* seletores livres (2026-07-27): hora fora da grelha e dia fora dos propostos. TODOS capados a
+     170px pela mesma razão do .hint/.pend-note/.confbtn — a coluna das horas é max-content */
+  .freelbl{color:var(--muted);font-size:12px;font-weight:700;line-height:1.35;margin-top:12px;text-align:center;max-width:170px}
+  .freerow{display:flex;gap:6px;margin-top:6px;max-width:170px}
+  .freesel{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:10px;padding:8px 4px;font-size:13.5px;font-weight:800;color:var(--navy);background:#fff;cursor:pointer;font-family:inherit}
+  .freesel:focus{outline:none;border-color:#9CC0E8}
+  .freeday{display:block;width:100%;max-width:170px;margin-top:6px;border:1.5px solid var(--line);border-radius:10px;padding:8px 6px;font-size:13.5px;font-weight:800;color:var(--navy);background:#fff;cursor:pointer;font-family:inherit}
   /* passo de confirmacao (2026-07-27): o chip so SELECIONA, e este botao e que envia */
   /* max-width 170px pela MESMA razão do .hint/.pend-note: a coluna das horas é max-content e o
      texto do botão, sem cap, esticava o card inteiro (medido: 484px de scroll a 320px de ecrã) */
@@ -83,6 +90,10 @@
     .altbtn{font-size:11px;padding:6px 8px}
     .morebtn{font-size:10.5px;padding:6px 5px}
     .pend-note{font-size:9.5px;max-width:140px}
+    .freelbl{font-size:10.5px;max-width:140px;margin-top:10px}
+    .freerow{max-width:140px;gap:4px}
+    .freesel,.freeday{font-size:12px;padding:7px 3px}
+    .freeday{max-width:140px}
     .times-h{font-size:12.5px;white-space:normal}
     .times-h .th-wd{white-space:nowrap}
     .hint{max-width:140px}
@@ -129,13 +140,16 @@ function render(){
   var card=document.getElementById('card');
   var data=dec(new URLSearchParams(location.search).get('q'));
   // byDate = {iso:{starts,exA,exP}} (listas de 'HH:MM').
-  // Formato do dia: [offset,[normal],[exA],[exP]] (4 elementos, links 2026-07-23+, sugestões de
-  // hora) ou o antigo [offset,[horas],[]] (3 elementos; o 3.º era o busy e é ignorado — a página
-  // não expõe marcações do calendário, decisão de segurança 2026-07-23). A deteção é pelo
-  // length>=4. Em cada lista: >=24 = minutos desde a meia-noite (ex. 850 = 14:10); <24 = hora
-  // inteira (links pré-2026-07-18). Suporta ainda a máscara antiga e o ?s legado.
-  // data.ad = dias ALTERNATIVOS (botão "Nenhum destes dias dá jeito?"), mesma forma, offsets
-  // relativos ao mesmo b (podem ser negativos). exA agenda logo; exP fica "sujeita a confirmação".
+  // Formato do dia: [offset,[horas]] (2 elementos, links v:2 de 2026-07-27+) · [offset,[normal],
+  // [exA],[exP]] (4 elementos, links 2026-07-23..26, sugestões de hora por chips) · [offset,
+  // [horas],[]] (3 elementos, o 3.º era o busy e é ignorado — a página não expõe marcações do
+  // calendário, decisão de segurança 2026-07-23). A deteção dos chips extra é pelo length>=4, por
+  // isso o formato v:2 de 2 elementos degrada exatamente como o de 3. Em cada lista: >=24 =
+  // minutos desde a meia-noite (ex. 850 = 14:10); <24 = hora inteira (links pré-2026-07-18).
+  // Suporta ainda a máscara antiga e o ?s legado.
+  // data.ad = dias ALTERNATIVOS pré-calculados, só nos links 2026-07-23..26 (mesma forma, offsets
+  // relativos ao mesmo b, podem ser negativos). exA agenda logo; exP fica "sujeita a confirmação".
+  // NADA disto vive nos links v:2 — ver o bloco NOVO mais abaixo.
   var byDate={}, altByDate={};
   var HRSm=['10:00','11:15','12:30','15:00','16:15'];
   function m2list(a){var o=[];(a||[]).forEach(function(v){o.push(m2h(v<24?v*60:v));});return o;}
@@ -153,6 +167,12 @@ function render(){
   if(!dates.length){card.innerHTML='<h1>Link inválido</h1><p class="warn">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
   // (2026-07-22, decisao do Bruno) os botoes "Confirmar por WhatsApp/email" foram removidos:
   // o rele + confirmacao automatica fecham o ciclo; fica so o "Adicionar ao meu calendario".
+  // NOVO (links v:2, 2026-07-27): os chips exA/exP e os dias alternativos pré-calculados
+  // desapareceram. "Prefere outra hora?" abre um seletor livre de hora (passos de 15 min) e
+  // "Nenhum destes dias dá jeito?" abre um seletor de dia útil + hora — QUALQUER pedido por estas
+  // vias é pendente (fila de Sugestões do Bruno). Toda a lógica nova está gated por este flag: os
+  // links JÁ ENVIADOS (3/4 elementos, sem v) continuam a comportar-se exatamente como hoje.
+  var NOVO=!!(data&&data.v>=2);
   var R=data.r||DEFAULT_R;
   var LSK='pharma_marcado_'+String(data.id||'');
   SID=String(data.id||(''+Date.now()));   // UMA vez por render: o retry reenvia o MESMO id
@@ -188,16 +208,85 @@ function render(){
   h+='</div>';
   // dias alternativos: só ficam clicáveis (estilo .alt) depois do clique — uma vez, sem toggle;
   // dias impossíveis nem sequer vêm no payload (sem mensagens de impossibilidade)
-  if(altDates.length)h+='<button class="altbtn" type="button">Nenhum destes dias dá jeito?</button>';
+  // v:2 → o botão está SEMPRE lá (abre o seletor livre de dia+hora); links antigos só o mostram
+  // se o payload trouxer dias alternativos pré-calculados
+  if(NOVO||altDates.length)h+='<button class="altbtn" type="button">Nenhum destes dias dá jeito?</button>';
   h+='</div><div class="pane-times" id="times"><p class="hint">Escolha um dia para ver as horas disponíveis.</p></div></div>';
   card.innerHTML=h;
   var timesEl=document.getElementById('times');
   card.querySelectorAll('.cell.avail').forEach(function(c){c.onclick=function(){pickDay(c.dataset.iso,c);};});
   card.querySelectorAll('.altbtn').forEach(function(b){b.onclick=function(){
+    if(NOVO){pickFreeDay();return;}   // v:2: seletor livre de dia+hora (o botão fica, para se poder voltar a abrir)
     b.style.display='none';
     card.querySelectorAll('.cell').forEach(function(z){var ai=z.getAttribute&&z.getAttribute('data-alt');if(!ai)return;
       z.classList.add('alt');z.onclick=function(){pickDay(ai,z);};});
   };});
+  // ---- seletores livres (v:2) ----
+  // Horas 08–19 × minutos 00/15/30/45. A 1.ª opção é vazia de propósito: sem escolha explícita não
+  // aparece botão de envio (o pedido é pendente, não se manda por engano).
+  function selHoras(cls,val){var o='<option value="">--</option>';
+    for(var H=8;H<=19;H++){var v=(H<10?'0':'')+H;o+='<option value="'+v+'"'+(val===v?' selected':'')+'>'+v+'h</option>';}
+    return '<select class="'+cls+'">'+o+'</select>';}
+  function selMinutos(cls,val){var o='';
+    ['00','15','30','45'].forEach(function(v){o+='<option value="'+v+'"'+(val===v?' selected':'')+'>'+v+'</option>';});
+    return '<select class="'+cls+'">'+o+'</select>';}
+  var NOTA_PEND='Qualquer hora fora da lista precisa de confirmação da nossa parte';
+  // Dias úteis das próximas 8 semanas a partir de AMANHÃ (56 dias < a janela de 60 do relé)
+  function diasUteis(){var o=[],d=new Date();d.setHours(12,0,0,0);
+    for(var i=1;i<=56;i++){var t=new Date(d);t.setDate(t.getDate()+i);var w=t.getDay();
+      if(w===0||w===6)continue;o.push({iso:isoOf(t),lbl:WD[w].slice(0,3)+' '+('0'+t.getDate()).slice(-2)+'/'+('0'+(t.getMonth()+1)).slice(-2)});}
+    return o;}
+  // Painel "Nenhum destes dias dá jeito?": UM pedido único dia + hora, sempre pendente.
+  function pickFreeDay(){
+    card.querySelectorAll('.cell').forEach(function(z){z.classList.remove('sel');});
+    var dias=diasUteis(), fdD='', fdH='', fdM='00', fdErr=false;
+    function draw2(){
+      var hh='<div class="times-h"><span class="th-wd">Outro dia</span></div>';
+      hh+='<div class="freelbl">Que dia lhe dá jeito?</div>';
+      hh+='<select class="freeday"><option value="">Escolha o dia</option>'
+        +dias.map(function(d){return '<option value="'+d.iso+'"'+(fdD===d.iso?' selected':'')+'>'+d.lbl+'</option>';}).join('')+'</select>';
+      hh+='<div class="freelbl">A que horas?</div><div class="freerow">'+selHoras('freeh',fdH)+selMinutos('freem',fdM)+'</div>';
+      hh+='<div class="pend-note">'+NOTA_PEND+'</div>';
+      if(fdErr){
+        hh+='<div class="senderr">Não foi possível enviar o pedido. Verifique a ligação e tente de novo — ou responda diretamente à mensagem que recebeu.</div>'
+          +'<button class="confbtn pend" type="button" data-t="'+fdH+':'+fdM+'" data-ap="1">Tentar novamente</button>';
+      }else if(fdD&&fdH){
+        var fs=fmt(fdD+'T'+fdH+':'+fdM);
+        hh+='<button class="confbtn pend" type="button" data-t="'+fdH+':'+fdM+'" data-ap="1">Pedir este dia — '
+          +fs.wd.slice(0,3)+', '+fs.dm+' às '+fs.hr+' (sujeito a confirmação)</button>';
+      }
+      timesEl.innerHTML=hh;
+      timesEl.querySelectorAll('.freeday').forEach(function(s){s.onchange=function(){fdD=s.value||'';fdErr=false;draw2();};});
+      timesEl.querySelectorAll('.freeh').forEach(function(s){s.onchange=function(){fdH=s.value||'';fdErr=false;draw2();};});
+      timesEl.querySelectorAll('.freem').forEach(function(s){s.onchange=function(){fdM=s.value||'00';fdErr=false;draw2();};});
+      timesEl.querySelectorAll('.confbtn').forEach(function(b){b.onclick=function(){
+        enviar(fdD+'T'+fdH+':'+fdM,1,b,function(){fdErr=true;draw2();});};});
+    }
+    draw2();
+    timesEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+  }
+  // Envio fiável: só se considera enviado quando o fetch RESOLVE (resposta opaca do no-cors).
+  // O try/catch síncrono anterior dava "Pedido enviado" com a rede em baixo — a promise rejeitava
+  // depois, em silêncio, e o pedido nunca chegava ao relé. `onErr` devolve o controlo a quem
+  // desenhou o painel (dia oferecido ou seletor livre), para o "Tentar novamente" aparecer lá.
+  // NÃO se manda campo nenhum a dizer "dia livre": a app recalcula isso sozinha no poll.
+  function enviar(isoT,ap,btnEl,onErr){
+    if(_sending)return; _sending=true;
+    if(btnEl){btnEl.disabled=true;btnEl.className='confbtn'+(ap?' pend':'')+' busy';btnEl.innerHTML='A enviar';}
+    // w = segredo de escrita do rele: vem no payload do link (nunca embutido nesta pagina, que e publica)
+    var body={k:data.k||'',c:data.c||'',slot:isoT,id:SID,w:data.w||''};
+    if(ap)body.ap=1;
+    var p; try{p=fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify(body)});}catch(e){p=Promise.reject(e);}
+    var tm; var lim=new Promise(function(_,rej){tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
+    Promise.race([p,lim]).then(function(){
+      clearTimeout(tm); _sending=false;
+      if(data.id)lsSet(LSK,(ap?'ap|':'')+isoT);
+      done(isoT,false,!!ap);
+      card.scrollIntoView({behavior:'smooth',block:'start'});
+    },function(){
+      clearTimeout(tm); _sending=false; if(onErr)onErr();
+    });
+  }
   // O clique num chip SELECIONA (2026-07-27) — envia só o botão de confirmação por baixo. Um toque
   // acidental no telemóvel deixou de fazer uma marcação. Estado por painel de dia (selT/selAp/
   // errState) + draw() a re-renderizar o painel inteiro, no estilo do resto da página. Expandir
@@ -207,18 +296,29 @@ function render(){
     cell.classList.add('sel');
     var f=fmt(iso+'T00:00'); var day=byDate[iso]||altByDate[iso];
     var selT=null,selAp=0,errState=false,first=true;
+    var freeOpen=false,freeH='',freeM='00';   // v:2: seletor livre de hora dentro DESTE dia
     function draw(){
       var hh='<div class="times-h"><span class="th-wd">'+f.wd+'</span><span class="th-sep">, </span><span class="th-dm">'+f.dm+'</span></div>';
       hh+='<div class="slots">';
-      // expand ("Prefere outra hora?"): junta exA (iguais às normais, fluxo automático) e exP
-      // (tracejadas, data-ap=1 → sujeitas a confirmação do Bruno), tudo por ordem cronológica
+      // expand ("Prefere outra hora?" nos links ANTIGOS): junta exA (iguais às normais, fluxo
+      // automático) e exP (tracejadas, data-ap=1 → sujeitas a confirmação do Bruno), cronológico
       var chips=day.starts.map(function(t){return {t:t,ap:0};});
       if(expand){day.exA.forEach(function(t){chips.push({t:t,ap:0});});day.exP.forEach(function(t){chips.push({t:t,ap:1});});}
       chips.sort(function(a,b){return a.t<b.t?-1:(a.t>b.t?1:0);});
-      chips.forEach(function(c2){hh+='<button class="chip'+(c2.ap?' pend':'')+(c2.t===selT?' sel':'')+'" data-t="'+c2.t+'"'+(c2.ap?' data-ap="1"':'')+'>'+c2.t.replace(':','h')+'</button>';});
+      // o chip só fica selecionado se a ESCOLHA for dele: a hora livre tem sempre ap=1, por isso
+      // uma hora livre que calhe coincidir com um chip não o acende (são mutuamente exclusivos)
+      chips.forEach(function(c2){hh+='<button class="chip'+(c2.ap?' pend':'')+((c2.t===selT&&c2.ap===selAp)?' sel':'')+'" data-t="'+c2.t+'"'+(c2.ap?' data-ap="1"':'')+'>'+c2.t.replace(':','h')+'</button>';});
       hh+='</div>';
-      if(!expand&&(day.exA.length||day.exP.length))hh+='<button class="morebtn" type="button">Prefere outra hora?</button>';
-      if(expand&&day.exP.length)hh+='<div class="pend-note">Horas assinaladas: sujeitas a confirmação da nossa parte</div>';
+      if(NOVO){
+        // v:2: o "Prefere outra hora?" abre o seletor livre (não há chips extra); a lista de horas
+        // do dia continua visível por cima e a seleção sobrevive a abrir/usar o seletor
+        if(!freeOpen)hh+='<button class="morebtn" type="button">Prefere outra hora?</button>';
+        else hh+='<div class="freelbl">Outra hora neste dia:</div><div class="freerow">'+selHoras('freeh',freeH)+selMinutos('freem',freeM)+'</div>'
+                +'<div class="pend-note">'+NOTA_PEND+'</div>';
+      }else{
+        if(!expand&&(day.exA.length||day.exP.length))hh+='<button class="morebtn" type="button">Prefere outra hora?</button>';
+        if(expand&&day.exP.length)hh+='<div class="pend-note">Horas assinaladas: sujeitas a confirmação da nossa parte</div>';
+      }
       if(errState){
         hh+='<div class="senderr">Não foi possível enviar o pedido. Verifique a ligação e tente de novo — ou responda diretamente à mensagem que recebeu.</div>'
           +'<button class="confbtn'+(selAp?' pend':'')+'" type="button" data-t="'+selT+'"'+(selAp?' data-ap="1"':'')+'>Tentar novamente</button>';
@@ -229,29 +329,13 @@ function render(){
       }
       timesEl.innerHTML=hh;
       timesEl.querySelectorAll('.chip').forEach(function(b){b.onclick=function(){selT=b.dataset.t;selAp=String(b.dataset.ap||'')==='1'?1:0;errState=false;draw();};});
-      timesEl.querySelectorAll('.morebtn').forEach(function(b){b.onclick=function(){pickDay(iso,cell,true);};});
-      timesEl.querySelectorAll('.confbtn').forEach(function(b){b.onclick=function(){enviar(iso+'T'+selT,selAp,b);};});
+      timesEl.querySelectorAll('.morebtn').forEach(function(b){b.onclick=function(){if(NOVO){freeOpen=true;draw();}else pickDay(iso,cell,true);};});
+      timesEl.querySelectorAll('.freeh').forEach(function(s){s.onchange=function(){freeH=s.value||'';errState=false;
+        if(freeH){selT=freeH+':'+freeM;selAp=1;}else if(selAp){selT=null;} draw();};});
+      timesEl.querySelectorAll('.freem').forEach(function(s){s.onchange=function(){freeM=s.value||'00';errState=false;
+        if(freeH){selT=freeH+':'+freeM;selAp=1;} draw();};});
+      timesEl.querySelectorAll('.confbtn').forEach(function(b){b.onclick=function(){enviar(iso+'T'+selT,selAp,b,function(){errState=true;draw();});};});
       if(first){first=false;timesEl.scrollIntoView({behavior:'smooth',block:'nearest'});}
-    }
-    // Envio fiável: só se considera enviado quando o fetch RESOLVE (resposta opaca do no-cors).
-    // O try/catch síncrono anterior dava "Pedido enviado" com a rede em baixo — a promise rejeitava
-    // depois, em silêncio, e o pedido nunca chegava ao relé.
-    function enviar(isoT,ap,btnEl){
-      if(_sending)return; _sending=true;
-      if(btnEl){btnEl.disabled=true;btnEl.className='confbtn'+(ap?' pend':'')+' busy';btnEl.innerHTML='A enviar';}
-      // w = segredo de escrita do rele: vem no payload do link (nunca embutido nesta pagina, que e publica)
-      var body={k:data.k||'',c:data.c||'',slot:isoT,id:SID,w:data.w||''};
-      if(ap)body.ap=1;
-      var p; try{p=fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify(body)});}catch(e){p=Promise.reject(e);}
-      var tm; var lim=new Promise(function(_,rej){tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
-      Promise.race([p,lim]).then(function(){
-        clearTimeout(tm); _sending=false;
-        if(data.id)lsSet(LSK,(ap?'ap|':'')+isoT);
-        done(isoT,false,!!ap);
-        card.scrollIntoView({behavior:'smooth',block:'start'});
-      },function(){
-        clearTimeout(tm); _sending=false; errState=true; draw();
-      });
     }
     draw();
   }
