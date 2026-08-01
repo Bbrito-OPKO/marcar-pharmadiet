@@ -162,7 +162,14 @@ function render(payloadPronto){
   if(data&&data.d&&data.b){ var base=parseD(data.b);
     data.d.forEach(function(pr){addDia(byDate,base,pr);});
     if(data.ad&&data.ad.length)data.ad.forEach(function(pr){addDia(altByDate,base,pr);});
-  } else if(data&&data.s&&data.s.length){ data.s.forEach(function(iso){var dd=iso.slice(0,10),tt=iso.split('T')[1]||'10:00';(byDate[dd]=byDate[dd]||{starts:[],exA:[],exP:[]}).starts.push(tt);}); }
+  } else if(data&&data.s&&data.s.length){ data.s.forEach(function(iso){var dd=iso.slice(0,10),tt=iso.split('T')[1]||'10:00';
+    /* Ramo LEGADO (`s`, links anteriores a 2026-07). No formato novo as horas passam pelo m2h()
+       e são numéricas; aqui vinham cruas do payload e iam parar ao innerHTML dos chips — um
+       `?q=` com `s:["2026-08-05T\" onclick=..."]` executava script nesta página. Não há sessão
+       nem segredos aqui, mas é phishing num domínio de confiança. Uma hora ou é HH:MM ou não é
+       hora. 2026-08-01. */
+    var mm=/^(\d\d:\d\d)(:\d\d)?$/.exec(tt); if(!mm)return;   // tolera o ISO com segundos, rejeita tudo o resto
+    (byDate[dd]=byDate[dd]||{starts:[],exA:[],exP:[]}).starts.push(mm[1]);}); }
   var dates=Object.keys(byDate).filter(function(k){return byDate[k].starts.length;}).sort();
   var altDates=Object.keys(altByDate).filter(function(k){var d2=altByDate[k];return (d2.starts.length||d2.exA.length||d2.exP.length)&&!byDate[k];}).sort();
   if(!dates.length){card.innerHTML='<h1>Link inválido</h1><p class="warn">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
@@ -174,7 +181,12 @@ function render(payloadPronto){
   // vias é pendente (fila de Sugestões do Bruno). Toda a lógica nova está gated por este flag: os
   // links JÁ ENVIADOS (3/4 elementos, sem v) continuam a comportar-se exatamente como hoje.
   var NOVO=!!(data&&data.v>=2);
-  var R=data.r||DEFAULT_R;
+  /* O URL do relé NUNCA vem do payload (2026-08-01). Era `data.r||DEFAULT_R`, e o
+     `rotaPickerPayload` nunca escreveu um `r` — o campo só podia existir num link forjado à mão.
+     Um `?q=<base64>` construído por terceiros apontava assim o POST (com `k`, `c`, `slot`, `id`
+     e o `w`) para um servidor arbitrário, a partir do domínio de confiança do GitHub Pages. Não
+     vazava segredo novo, mas era uma exfiltração/redireção de graça. Código morto — fora. */
+  var R=DEFAULT_R;
   var LSK='pharma_marcado_'+String(data.id||'');
   SID=String(data.id||(''+Date.now()));   // UMA vez por render: o retry reenvia o MESMO id
   var _sending=false;                     // guard de duplo clique (o botão também fica disabled)
