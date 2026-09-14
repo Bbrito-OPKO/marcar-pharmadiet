@@ -286,8 +286,12 @@ function render(payloadPronto){
   function enviar(isoT,ap,btnEl,onErr){
     if(_sending)return; _sending=true;
     if(btnEl){btnEl.disabled=true;btnEl.className='confbtn'+(ap?' pend':'')+' busy';btnEl.innerHTML='A enviar';}
-    // w = segredo de escrita do rele: vem no payload do link (nunca embutido nesta pagina, que e publica)
-    var body={k:data.k||'',c:data.c||'',slot:isoT,id:SID,w:data.w||''};
+    // s = assinatura do link longo (desde 14/09): so vale para este id e este cliente.
+    // w = o segredo de escrita, que so os links longos ANTERIORES a 14/09 ainda trazem.
+    // Nenhum dos dois esta embutido nesta pagina, que e publica: vem no payload do link.
+    var body={k:data.k||'',c:data.c||'',slot:isoT,id:SID};
+    if(data.s)body.s=data.s;
+    if(data.w)body.w=data.w;
     if(ap)body.ap=1;
     var p; try{p=fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify(body)});}catch(e){p=Promise.reject(e);}
     var tm; var lim=new Promise(function(_,rej){tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
