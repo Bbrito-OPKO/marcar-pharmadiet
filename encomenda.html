@@ -1,20 +1,34 @@
-<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Encomenda</title><style>*{box-sizing:border-box}body{margin:0;background:#F6F8FB;font-family:Arial,Helvetica,sans-serif;color:#39414D}.w{max-width:720px;margin:0 auto;padding:16px}h1{font-size:20px;color:#103F72;margin:4px 0 2px}.sub{font-size:13px;color:#6C7889;margin-bottom:14px}.falta{position:sticky;top:0;z-index:2;background:#fff;border:1px solid #DEE5EE;border-radius:12px;padding:12px 14px;margin-bottom:12px}.big{font-size:22px;font-weight:800;color:#E2920F}.bar{height:8px;background:#EEF2F7;border-radius:6px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:#E2920F}.ok .big{color:#557617}.ok .bar i{background:#6E9A1E}.nv{font-size:12px;color:#6C7889;margin-top:4px}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #DEE5EE;border-radius:12px;overflow:hidden}td{padding:9px 10px;border-bottom:1px solid #EEF2F7;font-size:14px}td.q{width:150px;text-align:center;white-space:nowrap}button.s{width:34px;height:34px;border-radius:10px;border:1px solid #DEE5EE;background:#fff;font-size:18px;color:#134F8E;cursor:pointer}input.n{width:56px;height:34px;text-align:center;font-size:16px;border:1px solid #DEE5EE;border-radius:10px;margin:0 4px}.tr{font-size:11px;color:#98A4B5}textarea{width:100%;min-height:60px;margin:12px 0;padding:8px;border:1px solid #DEE5EE;border-radius:10px;font:inherit;font-size:16px}.acts{display:flex;gap:10px;flex-wrap:wrap}.acts button{height:40px;padding:0 18px;border-radius:20px;font-weight:700;font-size:14px;cursor:pointer}#fin{border:1.5px solid #6E9A1E;background:#F3F9E7;color:#557617}#fin:disabled{opacity:.45;cursor:not-allowed}.sec{border:1.5px solid #DEE5EE;background:#fff;color:#39414D}#msg{font-size:12px;color:#557617;margin-top:8px;min-height:15px}.ents{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.ents:empty{display:none}.ch{height:34px;padding:0 10px;border-radius:17px;border:1.5px solid #DEE5EE;background:#fff;color:#39414D;font-weight:700;font-size:12px;cursor:pointer}.ch.on{background:#134F8E;border-color:#134F8E;color:#fff}.tt{font-size:11px;color:#98A4B5;margin-top:2px}</style></head><body><div class="w"><h1 id="nome"></h1><div class="sub" id="sub"></div><div id="fb" class="falta"><div id="big" class="big"></div><div class="bar"><i id="bi"></i></div><div id="nv" class="nv"></div></div><div id="ents" class="ents"></div><table><tbody id="tb"></tbody></table><textarea id="obs" placeholder="Observações (opcional)"></textarea><div class="acts"><button id="fin" onclick="finalizar()">Finalizar e enviar por email</button><button class="sec" onclick="copiar()">Copiar</button><button class="sec" onclick="repor()">Repor</button></div><div id="msg"></div><textarea id="txt" readonly style="display:none;min-height:160px"></textarea></div><script>var __PAGINA__=function sugFichPagina(){
+<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Encomenda</title><style>*{box-sizing:border-box}body{margin:0;background:#F6F8FB;font-family:Arial,Helvetica,sans-serif;color:#39414D}.w{max-width:720px;margin:0 auto;padding:16px}h1{font-size:20px;color:#103F72;margin:4px 0 2px}.sub{font-size:13px;color:#6C7889;margin-bottom:14px}.falta{position:sticky;top:0;z-index:2;background:#fff;border:1px solid #DEE5EE;border-radius:12px;padding:12px 14px;margin-bottom:12px}.big{font-size:22px;font-weight:800;color:#E2920F}.bar{height:8px;background:#EEF2F7;border-radius:6px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:#E2920F}.ok .big{color:#557617}.ok .bar i{background:#6E9A1E}.nv{font-size:12px;color:#6C7889;margin-top:4px}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #DEE5EE;border-radius:12px;overflow:hidden}td,th{padding:9px 8px;border-bottom:1px solid #EEF2F7;font-size:14px}td.q,td.tot{text-align:center;white-space:nowrap}th{background:#175FAA;color:#fff;font-size:12px;font-weight:700;text-align:center;white-space:nowrap}th.p,td.p{text-align:left;white-space:normal;min-width:110px}th .dt{font-size:11px;font-weight:400;opacity:.85}th[id]{cursor:pointer}th.on{background:#103F72}td.on{background:#EEF4FB}td.tot{font-weight:700;color:#103F72}span.v{display:inline-block;min-width:34px;padding:6px 0;cursor:pointer}.tw{overflow-x:auto;border-radius:12px}button.s{width:30px;height:32px;border-radius:10px;border:1px solid #DEE5EE;background:#fff;font-size:18px;color:#134F8E;cursor:pointer}input.n{width:46px;height:32px;text-align:center;font-size:16px;border:1px solid #DEE5EE;border-radius:10px;margin:0 3px}.tr{font-size:11px;color:#98A4B5}textarea{width:100%;min-height:60px;margin:12px 0;padding:8px;border:1px solid #DEE5EE;border-radius:10px;font:inherit;font-size:16px}.acts{display:flex;gap:10px;flex-wrap:wrap}.acts button{height:40px;padding:0 18px;border-radius:20px;font-weight:700;font-size:14px;cursor:pointer}#fin{border:1.5px solid #6E9A1E;background:#F3F9E7;color:#557617}#fin:disabled{opacity:.45;cursor:not-allowed}.sec{border:1.5px solid #DEE5EE;background:#fff;color:#39414D}#msg{font-size:12px;color:#557617;margin-top:8px;min-height:15px}.ents{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.ents:empty{display:none}.ch{height:34px;padding:0 10px;border-radius:17px;border:1.5px solid #DEE5EE;background:#fff;color:#39414D;font-weight:700;font-size:12px;cursor:pointer}.ch.on{background:#134F8E;border-color:#134F8E;color:#fff}</style></head><body><div class="w"><h1 id="nome"></h1><div class="sub" id="sub"></div><div id="fb" class="falta"><div id="big" class="big"></div><div class="bar"><i id="bi"></i></div><div id="nv" class="nv"></div></div><div id="ents" class="ents"></div><div class="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div><textarea id="obs" placeholder="Observações (opcional)"></textarea><div class="acts"><button id="fin" onclick="finalizar()">Finalizar e enviar por email</button><button class="sec" onclick="copiar()">Copiar</button><button class="sec" onclick="repor()">Repor</button></div><div id="msg"></div><textarea id="txt" readonly style="display:none;min-height:160px"></textarea></div><script>var __PAGINA__=function sugFichPagina(){
   var N=D.ent.length,K=0,doc=document;
   function mk(tag,cls,txt){var e=doc.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
   doc.title='Encomenda '+D.nome;
   doc.getElementById('nome').textContent=D.nome;
   doc.getElementById('sub').textContent='Proposta de encomenda Pharmadiet · '+String(D.data||'').split('-').reverse().join('/')+'. Ajuste as unidades: o botão Finalizar acende quando chegar ao valor.';
+  /* A TABELA TEM A FORMA DA DO ECRA (Bruno, 24/09/2026): uma coluna por encomenda, com a data
+     por baixo, e o Total antes delas. Os - e + so aparecem na encomenda escolhida (os botoes
+     por cima ou o titulo da coluna); nas outras fica o numero, e tocar nele muda para ela --
+     quatro colunas de - e + nao cabem num telemovel. */
   var ents=doc.getElementById('ents');
-  if(N>1)D.ent.forEach(function(e,k){var b=mk('button','ch');b.id='e'+k;b.onclick=function(){escolhe(k);};ents.appendChild(b);});
+  if(N>1)D.ent.forEach(function(e,k){var b=mk('button','ch',(k+1)+'ª encomenda');b.id='e'+k;b.onclick=function(){escolhe(k);};ents.appendChild(b);});
+  var th=doc.getElementById('th'),hr=mk('tr');hr.appendChild(mk('th','p','Produto'));
+  if(N>1)hr.appendChild(mk('th',null,'Total'));
+  D.ent.forEach(function(e,k){var h=mk('th',null,N>1?(k+1)+'ª encomenda':'Unidades');h.id='h'+k;
+    if(N>1){h.appendChild(mk('div','dt',e.d));h.onclick=function(){escolhe(k);};}hr.appendChild(h);});
+  th.appendChild(hr);
   var tb=doc.getElementById('tb');
-  D.linhas.forEach(function(l,i){var tr=mk('tr'),a=mk('td',null,l.d),q=mk('td','q');
+  D.linhas.forEach(function(l,i){var tr=mk('tr'),a=mk('td','p',l.d);
     if(l.t)a.appendChild(mk('div','tr','quantidade da campanha'));
-    var t=mk('div','tt');t.id='t'+i;a.appendChild(t);
-    if(l.t){var b=mk('b');b.id='b'+i;q.appendChild(b);}
-    else{var m=mk('button','s','−');m.onclick=function(){mexe(i,-1);};
-      var n=mk('input','n');n.id='q'+i;n.type='number';n.min='0';n.step='1';n.setAttribute('inputmode','numeric');n.oninput=function(){poe(i,this.value);};
-      var p=mk('button','s','+');p.onclick=function(){mexe(i,1);};q.appendChild(m);q.appendChild(n);q.appendChild(p);}
-    tr.appendChild(a);tr.appendChild(q);tb.appendChild(tr);});
+    tr.appendChild(a);
+    if(N>1){var t=mk('td','tot');t.id='t'+i;tr.appendChild(t);}
+    D.ent.forEach(function(e,k){var q=mk('td','q');q.id='c'+i+'_'+k;
+      if(l.t){var b=mk('b');b.id='b'+i+'_'+k;q.appendChild(b);}
+      else{var v=mk('span','v');v.id='v'+i+'_'+k;v.onclick=function(){escolhe(k);};
+        var g=mk('span','g');g.id='g'+i+'_'+k;
+        var m=mk('button','s','−');m.onclick=function(){mexe(i,-1);};
+        var n=mk('input','n');n.id='q'+i+'_'+k;n.type='number';n.min='0';n.step='1';n.setAttribute('inputmode','numeric');n.oninput=function(){poe(i,this.value);};
+        var p=mk('button','s','+');p.onclick=function(){mexe(i,1);};g.appendChild(m);g.appendChild(n);g.appendChild(p);q.appendChild(v);q.appendChild(g);}
+      tr.appendChild(q);});
+    tb.appendChild(tr);});
   function copia(){return D.linhas.map(function(l){return l.u.slice();});}
   var Q=copia();
   function tl(i){var s=0;for(var k=0;k<N;k++)s+=Q[i][k];return s;}
@@ -27,9 +41,13 @@
     doc.getElementById('big').textContent=e.ok?'Objetivo atingido ✓':(e.falta>=0.005?'Faltam '+eur(e.falta):'Faltam os produtos abaixo');
     doc.getElementById('bi').style.width=(D.alvo>0?Math.min(100,e.t/D.alvo*100):100)+'%';
     doc.getElementById('nv').textContent=e.nv.join(' · ');doc.getElementById('fin').disabled=!e.ok;
-    D.linhas.forEach(function(l,i){var el=doc.getElementById('q'+i);if(el&&doc.activeElement!==el)el.value=Q[i][K];
-      var b=doc.getElementById('b'+i);if(b)b.textContent=Q[i][K];var t=doc.getElementById('t'+i);if(t)t.textContent=N>1?'total '+tl(i):'';});
-    for(var k=0;k<N;k++){var c=doc.getElementById('e'+k);if(c){var n=0;D.linhas.forEach(function(l,i){n+=Q[i][k];});c.className='ch'+(k===K?' on':'');c.textContent=(k+1)+'.ª · '+D.ent[k].d+' · '+n+' un';}}}
+    D.linhas.forEach(function(l,i){var t=doc.getElementById('t'+i);if(t)t.textContent=tl(i);
+      for(var k=0;k<N;k++){var on=k===K;doc.getElementById('c'+i+'_'+k).className='q'+(on&&N>1?' on':'');
+        if(l.t){doc.getElementById('b'+i+'_'+k).textContent=Q[i][k];continue;}
+        var el=doc.getElementById('q'+i+'_'+k);if(doc.activeElement!==el)el.value=Q[i][k];
+        doc.getElementById('v'+i+'_'+k).textContent=Q[i][k];
+        doc.getElementById('v'+i+'_'+k).style.display=on?'none':'';doc.getElementById('g'+i+'_'+k).style.display=on?'':'none';}});
+    for(var k=0;k<N;k++){var c=doc.getElementById('e'+k);if(c)c.className='ch'+(k===K?' on':'');if(N>1)doc.getElementById('h'+k).className=k===K?'on':'';}}
   function escolhe(k){K=k;pinta();}
   function mexe(i,d){if(D.linhas[i].t)return;Q[i][K]=Math.max(0,(Q[i][K]|0)+d);pinta();}
   function poe(i,v){if(D.linhas[i].t)return;v=parseInt(v,10);Q[i][K]=isNaN(v)||v<0?0:v;pinta();}
