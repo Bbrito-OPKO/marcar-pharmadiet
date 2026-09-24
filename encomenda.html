@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Encomenda</title><style>*{box-sizing:border-box}body{margin:0;background:#F6F8FB;font-family:Arial,Helvetica,sans-serif;color:#39414D}.w{max-width:720px;margin:0 auto;padding:16px}h1{font-size:20px;color:#103F72;margin:4px 0 2px}.sub{font-size:13px;color:#6C7889;margin-bottom:14px}.falta{position:sticky;top:0;z-index:2;background:#fff;border:1px solid #DEE5EE;border-radius:12px;padding:12px 14px;margin-bottom:12px}.big{font-size:22px;font-weight:800;color:#E2920F}.bar{height:8px;background:#EEF2F7;border-radius:6px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:#E2920F}.ok .big{color:#557617}.ok .bar i{background:#6E9A1E}.nv{font-size:12px;color:#6C7889;margin-top:4px}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #DEE5EE;border-radius:12px;overflow:hidden}td{padding:9px 10px;border-bottom:1px solid #EEF2F7;font-size:14px}td.q{width:150px;text-align:center;white-space:nowrap}button.s{width:34px;height:34px;border-radius:10px;border:1px solid #DEE5EE;background:#fff;font-size:18px;color:#134F8E;cursor:pointer}input.n{width:56px;height:34px;text-align:center;font-size:16px;border:1px solid #DEE5EE;border-radius:10px;margin:0 4px}.tr{font-size:11px;color:#98A4B5}textarea{width:100%;min-height:60px;margin:12px 0;padding:8px;border:1px solid #DEE5EE;border-radius:10px;font:inherit;font-size:16px}.acts{display:flex;gap:10px;flex-wrap:wrap}.acts button{height:40px;padding:0 18px;border-radius:20px;font-weight:700;font-size:14px;cursor:pointer}#fin{border:1.5px solid #6E9A1E;background:#F3F9E7;color:#557617}#fin:disabled{opacity:.45;cursor:not-allowed}.sec{border:1.5px solid #DEE5EE;background:#fff;color:#39414D}#msg{font-size:12px;color:#557617;margin-top:8px;min-height:15px}.ents{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.ents:empty{display:none}.ch{height:34px;padding:0 10px;border-radius:17px;border:1.5px solid #DEE5EE;background:#fff;color:#39414D;font-weight:700;font-size:12px;cursor:pointer}.ch.on{background:#134F8E;border-color:#134F8E;color:#fff}.tt{font-size:11px;color:#98A4B5;margin-top:2px}</style></head><body><div class="w"><h1 id="nome"></h1><div class="sub" id="sub"></div><div id="fb" class="falta"><div id="big" class="big"></div><div class="bar"><i id="bi"></i></div><div id="nv" class="nv"></div></div><div id="ents" class="ents"></div><table><tbody id="tb"></tbody></table><textarea id="obs" placeholder="Observações (opcional)"></textarea><div class="acts"><button id="fin" onclick="finalizar()">Finalizar e enviar por email</button><button class="sec" onclick="copiar()">Copiar</button><button class="sec" onclick="repor()">Repor</button></div><div id="msg"></div><textarea id="txt" readonly style="display:none;min-height:160px"></textarea></div><script>var __PAGINA__=function sugFichPagina(){
+  var N=D.ent.length,K=0,doc=document;
+  function mk(tag,cls,txt){var e=doc.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
+  doc.title='Encomenda '+D.nome;
+  doc.getElementById('nome').textContent=D.nome;
+  doc.getElementById('sub').textContent='Proposta de encomenda Pharmadiet · '+String(D.data||'').split('-').reverse().join('/')+'. Ajuste as unidades: o botão Finalizar acende quando chegar ao valor.';
+  var ents=doc.getElementById('ents');
+  if(N>1)D.ent.forEach(function(e,k){var b=mk('button','ch');b.id='e'+k;b.onclick=function(){escolhe(k);};ents.appendChild(b);});
+  var tb=doc.getElementById('tb');
+  D.linhas.forEach(function(l,i){var tr=mk('tr'),a=mk('td',null,l.d),q=mk('td','q');
+    if(l.t)a.appendChild(mk('div','tr','quantidade da campanha'));
+    var t=mk('div','tt');t.id='t'+i;a.appendChild(t);
+    if(l.t){var b=mk('b');b.id='b'+i;q.appendChild(b);}
+    else{var m=mk('button','s','−');m.onclick=function(){mexe(i,-1);};
+      var n=mk('input','n');n.id='q'+i;n.type='number';n.min='0';n.step='1';n.setAttribute('inputmode','numeric');n.oninput=function(){poe(i,this.value);};
+      var p=mk('button','s','+');p.onclick=function(){mexe(i,1);};q.appendChild(m);q.appendChild(n);q.appendChild(p);}
+    tr.appendChild(a);tr.appendChild(q);tb.appendChild(tr);});
+  function copia(){return D.linhas.map(function(l){return l.u.slice();});}
+  var Q=copia();
+  function tl(i){var s=0;for(var k=0;k<N;k++)s+=Q[i][k];return s;}
+  function eur(x){return x.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
+  function soma(g){var s=0;D.linhas.forEach(function(l,i){if(g===undefined||l.g===g)s+=l.v*tl(i);});return s;}
+  function estado(){var t=soma(),falta=Math.max(0,D.alvo-t),ok=falta<0.005,nv=[];
+    D.novos.forEach(function(n){var fx=Math.max(0,n.f-soma(n.g));if(fx>=0.005){ok=false;nv.push(n.g+': faltam '+eur(fx));}});
+    return {t:t,falta:falta,ok:ok,nv:nv};}
+  function pinta(){var e=estado();doc.getElementById('fb').className='falta'+(e.ok?' ok':'');
+    doc.getElementById('big').textContent=e.ok?'Objetivo atingido ✓':(e.falta>=0.005?'Faltam '+eur(e.falta):'Faltam os produtos abaixo');
+    doc.getElementById('bi').style.width=(D.alvo>0?Math.min(100,e.t/D.alvo*100):100)+'%';
+    doc.getElementById('nv').textContent=e.nv.join(' · ');doc.getElementById('fin').disabled=!e.ok;
+    D.linhas.forEach(function(l,i){var el=doc.getElementById('q'+i);if(el&&doc.activeElement!==el)el.value=Q[i][K];
+      var b=doc.getElementById('b'+i);if(b)b.textContent=Q[i][K];var t=doc.getElementById('t'+i);if(t)t.textContent=N>1?'total '+tl(i):'';});
+    for(var k=0;k<N;k++){var c=doc.getElementById('e'+k);if(c){var n=0;D.linhas.forEach(function(l,i){n+=Q[i][k];});c.className='ch'+(k===K?' on':'');c.textContent=(k+1)+'.ª · '+D.ent[k].d+' · '+n+' un';}}}
+  function escolhe(k){K=k;pinta();}
+  function mexe(i,d){if(D.linhas[i].t)return;Q[i][K]=Math.max(0,(Q[i][K]|0)+d);pinta();}
+  function poe(i,v){if(D.linhas[i].t)return;v=parseInt(v,10);Q[i][K]=isNaN(v)||v<0?0:v;pinta();}
+  function repor(){Q=copia();pinta();}
+  function texto(){var B=[];for(var k=0;k<N;k++){var L=[];D.linhas.forEach(function(l,i){if(Q[i][k]>0)L.push((l.c?l.c+' - ':'')+l.d+': '+Q[i][k]+' un');});
+      if(L.length)B.push((N>1?'Entrega '+(k+1)+' ('+D.ent[k].d+'):\n':'')+L.join('\n'));}
+    var o=(doc.getElementById('obs').value||'').trim();
+    return 'Encomenda '+D.nome+' (NIF '+D.nif+')\n\n'+B.join('\n\n')+(o?'\n\nObservações: '+o:'');}
+  function finalizar(){if(!estado().ok)return;var s='Encomenda '+D.nome+' (NIF '+D.nif+')';
+    location.href='mailto:'+D.para+'?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(texto());
+    doc.getElementById('msg').textContent='Se o email não abriu, carregue em Copiar e cole num email para '+D.para+'.';}
+  /* Sem area de transferencia (ficheiro aberto de um anexo, browser antigo), o texto aparece
+     numa caixa ja selecionada, para copiar a mao. */
+  function mostra(t){var x=doc.getElementById('txt');x.value=t;x.style.display='block';try{x.focus();x.select();}catch(e){}
+    doc.getElementById('msg').textContent='Copie o texto da caixa e cole num email para '+D.para+'.';}
+  function copiar(){var t=texto(),m=doc.getElementById('msg');
+    if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){m.textContent='Copiado. Cole num email para '+D.para+'.';},function(){mostra(t);});
+    else mostra(t);}
+  window.mexe=mexe;window.poe=poe;window.escolhe=escolhe;window.repor=repor;window.finalizar=finalizar;window.copiar=copiar;window.__estado=estado;window.__texto=texto;window.__Q=function(){return Q;};
+  pinta();
+};(function sugFichArranque(){
+  /* abrir OUTRO link com a pagina ja aberta so muda o `#` -- sem recarregar ficava a encomenda velha */
+  window.addEventListener('hashchange',function(){location.reload();});
+  function b64(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var r=atob(s),u=new Uint8Array(r.length);for(var i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return u;}
+  function erro(){document.getElementById('nome').textContent='Link incompleto';document.getElementById('sub').textContent='Este link não traz a encomenda inteira. Peça um novo a quem lho enviou.';document.getElementById('fb').style.display='none';document.querySelector('.acts').style.display='none';}
+  try{var h=location.hash.slice(1),tipo=h.charAt(0),u=b64(h.slice(1)),p;
+    if(tipo==='z')p=new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer().then(function(b){return new Uint8Array(b);});
+    else if(tipo==='j')p=Promise.resolve(u);else{erro();return;}
+    p.then(function(b){window.D=JSON.parse(new TextDecoder().decode(b));__PAGINA__();}).catch(erro);
+  }catch(e){erro();}
+})();</script></body></html>
