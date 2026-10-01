@@ -170,8 +170,19 @@ function render(payloadPronto){
        hora. 2026-08-01. */
     var mm=/^(\d\d:\d\d)(:\d\d)?$/.exec(tt); if(!mm)return;   // tolera o ISO com segundos, rejeita tudo o resto
     (byDate[dd]=byDate[dd]||{starts:[],exA:[],exP:[]}).starts.push(mm[1]);}); }
+  /* O QUE JÁ PASSOU NÃO SE OFERECE (01/10/2026, G3 do go-live). Um link velho mostrava os dias
+     de há semanas como clicáveis; o relé recusava ("slot fora da janela") e a página dizia
+     "Pedido enviado". Hoje: dia anterior a hoje sai, e hoje só ficam as horas ainda por vir.
+     Um link que fica sem nada diz que JÁ PASSOU (é outra coisa de um link estragado). */
+  var tinhaDatas=Object.keys(byDate).some(function(k){return byDate[k].starts.length;});
+  var _ag=new Date(), HOJE=isoOf(_ag), AGORA=m2h(_ag.getHours()*60+_ag.getMinutes());
+  function semPassado(map){Object.keys(map).forEach(function(k){
+    if(k<HOJE){delete map[k];return;}
+    if(k===HOJE){var fut=function(t){return t>AGORA;};map[k].starts=map[k].starts.filter(fut);map[k].exA=map[k].exA.filter(fut);map[k].exP=map[k].exP.filter(fut);}});}
+  semPassado(byDate); semPassado(altByDate);
   var dates=Object.keys(byDate).filter(function(k){return byDate[k].starts.length;}).sort();
   var altDates=Object.keys(altByDate).filter(function(k){var d2=altByDate[k];return (d2.starts.length||d2.exA.length||d2.exP.length)&&!byDate[k];}).sort();
+  if(!dates.length&&tinhaDatas){card.innerHTML='<h1>Este link já passou</h1><p class="warn">Os dias deste link já passaram. Por favor responda diretamente à mensagem que recebeu e combinamos outro dia.</p>';return;}
   if(!dates.length){card.innerHTML='<h1>Link inválido</h1><p class="warn">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
   // (2026-07-22, decisao do Bruno) os botoes "Confirmar por WhatsApp/email" foram removidos:
   // o rele + confirmacao automatica fecham o ciclo; fica so o "Adicionar ao meu calendario".
@@ -293,16 +304,44 @@ function render(payloadPronto){
     if(data.s)body.s=data.s;
     if(data.w)body.w=data.w;
     if(ap)body.ap=1;
-    var p; try{p=fetch(R,{method:'POST',mode:'no-cors',body:JSON.stringify(body)});}catch(e){p=Promise.reject(e);}
+    /* A RESPOSTA DO RELÉ É LIDA (01/10/2026, G3 do go-live). Era `mode:'no-cors'`: a página
+       nunca sabia o que o relé respondeu, e um link já usado, um dia fora da janela ou um link
+       recusado diziam todos "Pedido enviado" -- o cliente ficava com uma marcação que não
+       existia. O Apps Script responde com CORS legível (medido a 01/10: o 302 e o 200 do
+       googleusercontent levam `Access-Control-Allow-Origin: *`) e o corpo vai como texto simples
+       (sem cabeçalhos = text/plain, sem preflight), portanto basta ler.
+       A recusa só se mostra quando se LÊ uma recusa: uma resposta que não se consegue ler
+       (opaca, sem JSON) fica como antes -- "enviado" --, porque inventar uma falha que pode não
+       ter havido punha o cliente a tentar outra vez num link que já marcou. */
+    _tentativas++;
+    var p; try{p=fetch(R,{method:'POST',body:JSON.stringify(body)});}catch(e){p=Promise.reject(e);}
     var tm; var lim=new Promise(function(_,rej){tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
-    Promise.race([p,lim]).then(function(){
+    Promise.race([p.then(lerResposta),lim]).then(function(j){
       clearTimeout(tm); _sending=false;
+      /* `used` depois de uma tentativa ANTERIOR desta mesma página (a rede caiu a meio e o
+         pedido chegou): é o nosso pedido, não um link gasto por outra pessoa. */
+      if(j&&j.ok===false&&!(j.error==='used'&&_tentativas>1)){recusado(j.error);return;}
       if(data.id)lsSet(LSK,(ap?'ap|':'')+isoT);
       done(isoT,false,!!ap);
       card.scrollIntoView({behavior:'smooth',block:'start'});
     },function(){
       clearTimeout(tm); _sending=false; if(onErr)onErr();
     });
+  }
+  var _tentativas=0;
+  function lerResposta(r){
+    if(!r||typeof r.json!=='function'||r.type==='opaque')return null;
+    return Promise.resolve().then(function(){return r.json();}).then(function(j){return (j&&typeof j==='object')?j:null;},function(){return null;});
+  }
+  /* O relé disse que não: diz-se ao cliente porquê, em palavras dele, e o que fazer. */
+  function recusado(err){
+    var t,m;
+    if(err==='used'){t='Este link já foi usado';m='Já foi pedida uma visita com este link. Se quiser mudar o dia ou a hora, responda diretamente à mensagem que recebeu.';}
+    else if(err==='slot fora da janela'||err==='slot invalido'){t='Esse dia já não pode ser marcado';m='Esse dia já passou ou está fora do prazo deste link. Por favor responda diretamente à mensagem que recebeu e combinamos outro dia.';}
+    else if(err==='limite diario'){t='Não foi possível registar o pedido';m='Não consegui registar o pedido agora. Por favor responda diretamente à mensagem que recebeu e trato da marcação consigo.';}
+    else{t='Este link já não é válido';m='Não foi possível marcar com este link. Por favor responda diretamente à mensagem que recebeu.';}
+    ecra(t,m);
+    card.scrollIntoView({behavior:'smooth',block:'start'});
   }
   // O clique num chip SELECIONA (2026-07-27) — envia só o botão de confirmação por baixo. Um toque
   // acidental no telemóvel deixou de fazer uma marcação. Estado por painel de dia (selT/selAp/
