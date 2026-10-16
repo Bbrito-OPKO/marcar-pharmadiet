@@ -199,14 +199,22 @@ function sugFechoAcerta(lista,alvo,jaFeito){
     esc.r.sug--;v-=esc.net;
   }
 }
+var SUG_FICH_RELE="https://script.google.com/macros/s/AKfycbzedS0F01jmcMy-mLf4deECfyUr5feSak9e1M5NHlccfUU4dC1dpwNxmg722aRKjBej7g/exec";
 (function sugFichArranque(){
   /* abrir OUTRO link com a pagina ja aberta so muda o `#` -- sem recarregar ficava a encomenda velha */
   window.addEventListener('hashchange',function(){location.reload();});
   function b64(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var r=atob(s),u=new Uint8Array(r.length);for(var i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return u;}
   function erro(){document.getElementById('nome').textContent='Link incompleto';document.getElementById('sub').textContent='Este link não traz a encomenda inteira. Peça um novo a quem lho enviou.';document.getElementById('fb').style.display='none';document.querySelector('.acts').style.display='none';}
-  try{var h=location.hash.slice(1),tipo=h.charAt(0),u=b64(h.slice(1)),p;
+  function abre(h){try{var tipo=h.charAt(0),u=b64(h.slice(1)),p;
     if(tipo==='z')p=new Response(new Blob([u]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer().then(function(b){return new Uint8Array(b);});
     else if(tipo==='j')p=Promise.resolve(u);else{erro();return;}
     p.then(function(b){window.D=JSON.parse(new TextDecoder().decode(b));__PAGINA__();}).catch(erro);
-  }catch(e){erro();}
+  }catch(e){erro();}}
+  /* link curto `?i=<id>`: a encomenda vem do rele (ver `sugFichLinkCurto`) */
+  var i='';try{i=new URLSearchParams(location.search).get('i')||'';}catch(e){}
+  if(!i){abre(location.hash.slice(1));return;}
+  document.getElementById('nome').textContent='Um momento…';document.getElementById('sub').textContent='A carregar a encomenda.';
+  fetch(SUG_FICH_RELE+'?action=load&i='+encodeURIComponent(i)).then(function(r){return r.json();})
+    .then(function(j){if(j&&j.ok&&j.p)abre(String(j.p));else erro();})
+    .catch(function(){erro();document.getElementById('nome').textContent='Sem ligação';document.getElementById('sub').textContent='Não consegui carregar a encomenda. Verifique a ligação e volte a abrir o link.';});
 })();</script></body></html>
