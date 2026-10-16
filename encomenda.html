@@ -1,13 +1,21 @@
-<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Encomenda</title><style>*{box-sizing:border-box}body{margin:0;background:#F6F8FB;font-family:Arial,Helvetica,sans-serif;color:#39414D}.w{max-width:720px;margin:0 auto;padding:16px}h1{font-size:20px;color:#103F72;margin:4px 0 2px}.sub{font-size:13px;color:#6C7889;margin-bottom:14px}.falta{position:sticky;top:0;z-index:2;background:#fff;border:1px solid #DEE5EE;border-radius:12px;padding:12px 14px;margin-bottom:12px}.big{font-size:22px;font-weight:800;color:#D24A3D}.bar{height:8px;background:#EEF2F7;border-radius:6px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:#D24A3D}.falta.mau{border-color:#D24A3D;background:#FBE9E7}.falta.ok{border-color:#6E9A1E;background:#F3F9E7}.ok .big{color:#557617}.ok .bar i{background:#6E9A1E}td.p.nao{color:#B23A2F;box-shadow:inset 4px 0 0 #D24A3D}td.p.sim{color:#557617;box-shadow:inset 4px 0 0 #6E9A1E}.mx{flex-basis:100%;font-size:12px;color:#6C7889}.nv{font-size:12px;color:#6C7889;margin-top:4px}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #DEE5EE;border-radius:12px;overflow:hidden}td,th{padding:9px 8px;border-bottom:1px solid #EEF2F7;font-size:14px}td.q{text-align:center;white-space:nowrap}th{background:#175FAA;color:#fff;font-size:12px;font-weight:700;text-align:center;white-space:nowrap}th.p,td.p{text-align:left;white-space:normal;min-width:110px}th .dt{font-size:11px;font-weight:400;opacity:.85}th[id]{cursor:pointer}th.on{background:#103F72}td.on{background:#EEF4FB}span.v{display:inline-block;min-width:34px;padding:6px 0;cursor:pointer}.tw{overflow-x:auto;border-radius:12px}button.s{width:30px;height:32px;border-radius:10px;border:1px solid #DEE5EE;background:#fff;font-size:18px;color:#134F8E;cursor:pointer}input.n{width:46px;height:32px;text-align:center;font-size:16px;border:1px solid #DEE5EE;border-radius:10px;margin:0 3px}.tr{font-size:11px;color:#98A4B5}textarea{width:100%;min-height:60px;margin:12px 0;padding:8px;border:1px solid #DEE5EE;border-radius:10px;font:inherit;font-size:16px}.acts{display:flex;gap:10px;flex-wrap:wrap}.acts button{height:40px;padding:0 18px;border-radius:20px;font-weight:700;font-size:14px;cursor:pointer}#fin{border:1.5px solid #6E9A1E;background:#F3F9E7;color:#557617}#fin:disabled{opacity:.45;cursor:not-allowed}.sec{border:1.5px solid #DEE5EE;background:#fff;color:#39414D}#msg{font-size:12px;color:#557617;margin-top:8px;min-height:15px}.ents{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.ents:empty{display:none}.ch{height:34px;padding:0 10px;border-radius:17px;border:1.5px solid #DEE5EE;background:#fff;color:#39414D;font-weight:700;font-size:12px;cursor:pointer}.ch.on{background:#134F8E;border-color:#134F8E;color:#fff}</style></head><body><div class="w"><h1 id="nome"></h1><div class="sub" id="sub"></div><div id="modos" class="ents"></div><div id="fb" class="falta"><div id="big" class="big"></div><div class="bar"><i id="bi"></i></div><div id="nv" class="nv"></div></div><div id="ents" class="ents"></div><div class="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div><textarea id="obs" placeholder="Observações (opcional)"></textarea><div class="acts"><button id="fin" onclick="finalizar()">Finalizar e enviar por email</button><button class="sec" onclick="copiar()">Copiar</button><button class="sec" onclick="repor()">Repor</button></div><div id="msg"></div><textarea id="txt" readonly style="display:none;min-height:160px"></textarea></div><script>var __PAGINA__=function sugFichPagina(){
+<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Encomenda</title><style>*{box-sizing:border-box}body{margin:0;background:#F6F8FB;font-family:Arial,Helvetica,sans-serif;color:#39414D}.w{max-width:720px;margin:0 auto;padding:16px}h1{font-size:20px;color:#103F72;margin:4px 0 2px}.sub{font-size:13px;color:#6C7889;margin-bottom:14px}.falta{position:sticky;top:0;z-index:2;background:#fff;border:1px solid #DEE5EE;border-radius:12px;padding:12px 14px;margin-bottom:12px}.big{font-size:22px;font-weight:800;color:#D24A3D}.bar{height:8px;background:#EEF2F7;border-radius:6px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:#D24A3D}.falta.mau{border-color:#D24A3D;background:#FBE9E7}.falta.ok{border-color:#6E9A1E;background:#F3F9E7}.ok .big{color:#557617}.ok .bar i{background:#6E9A1E}td.p.nao{color:#B23A2F;box-shadow:inset 4px 0 0 #D24A3D}td.p.sim{color:#557617;box-shadow:inset 4px 0 0 #6E9A1E}.mx{flex-basis:100%;text-align:center;font-size:14px;font-weight:600;color:#103F72}.nv{font-size:12px;color:#6C7889;margin-top:4px}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #DEE5EE;border-radius:12px;overflow:hidden}td,th{padding:9px 8px;border-bottom:1px solid #EEF2F7;font-size:14px}td.q{text-align:center;white-space:nowrap}th{background:#175FAA;color:#fff;font-size:12px;font-weight:700;text-align:center;white-space:nowrap}th.p,td.p{text-align:left;white-space:normal;min-width:110px}th.p{text-align:center}th .dt{font-size:11px;font-weight:400;opacity:.85}th[id]{cursor:pointer}th.on{background:#103F72}td.on{background:#EEF4FB}span.v{display:inline-block;min-width:34px;padding:6px 0;cursor:pointer}.tw{overflow-x:auto;border-radius:12px}button.s{width:30px;height:32px;border-radius:10px;border:1px solid #DEE5EE;background:#fff;font-size:18px;color:#134F8E;cursor:pointer}input.n{width:46px;height:32px;text-align:center;font-size:16px;border:1px solid #DEE5EE;border-radius:10px;margin:0 3px}.tr{font-size:11px;color:#98A4B5}textarea{width:100%;min-height:60px;margin:12px 0;padding:8px;border:1px solid #DEE5EE;border-radius:10px;font:inherit;font-size:16px}.acts{display:flex;gap:10px;flex-wrap:wrap}.acts button{height:40px;padding:0 18px;border-radius:20px;font-weight:700;font-size:14px;cursor:pointer}#fin{border:1.5px solid #6E9A1E;background:#F3F9E7;color:#557617}#fin:disabled{opacity:.45;cursor:not-allowed}.sec{border:1.5px solid #DEE5EE;background:#fff;color:#39414D}#msg{font-size:12px;color:#557617;margin-top:8px;min-height:15px}.ex{background:#EEF4FB;border:1px solid #C9DBF0;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:14.5px;line-height:1.45;color:#103F72}.ex div+div{margin-top:4px}input.n.fx{border:2px solid #175FAA;background:#EEF4FB;font-weight:700;color:#103F72}.ents{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:10px}.ents:empty{display:none}.ch{height:34px;padding:0 10px;border-radius:17px;border:1.5px solid #DEE5EE;background:#fff;color:#39414D;font-weight:700;font-size:12px;cursor:pointer}.ch.on{background:#134F8E;border-color:#134F8E;color:#fff}</style></head><body><div class="w"><h1 id="nome"></h1><div class="sub" id="sub"></div><div class="ex" id="ex"></div><div id="modos" class="ents"></div><div id="fb" class="falta"><div id="big" class="big"></div><div class="bar"><i id="bi"></i></div><div id="nv" class="nv"></div></div><div id="ents" class="ents"></div><div class="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div><textarea id="obs" placeholder="Observações (opcional)"></textarea><div class="acts"><button id="fin" onclick="finalizar()">Finalizar e enviar por email</button><button class="sec" onclick="copiar()">Copiar</button><button class="sec" onclick="repor()">Repor</button></div><div id="msg"></div><textarea id="txt" readonly style="display:none;min-height:160px"></textarea></div><script>var __PAGINA__=function sugFichPagina(){
   var N=D.ent.length,K=0,doc=document;
   /* O MODO E DO CLIENTE (Bruno, 16/10/2026): "Base + Novos" (o total e cada produto novo com o
      minimo dele) ou "Base" (um valor so, os novos la dentro). So aparece a escolha quando as duas
      dao contas diferentes; um link de antes (sem `alvoT`) fica no Base + Novos, como era. */
-  var DUAS=D.alvoT!=null&&(D.novos.length>0||Math.abs(D.alvo-D.alvoT)>=0.005),MO=DUAS&&D.m==='total'?'total':'base';
+  /* AJUSTE AUTOMATICO, como na app: a linha que o cliente mexe fica FIXA e as outras livres da
+     MESMA encomenda acertam-se pelo alocador do fecho (opcao A do Bruno, 16/10: so a encomenda
+     escolhida; as outras colunas nao mexem). Um link de antes nao traz `bf` e fica sem ajuste. */
+  var AUTO=D.bf!=null&&typeof sugFechoAlocar==='function',FX=[];
+  var DUAS=D.alvoT!=null&&(D.novos.length>0||Math.abs(D.alvo-D.alvoT)>=0.005),MO=DUAS&&D.m==='total'?'total':'base',M0=MO;
   function mk(tag,cls,txt){var e=doc.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
   doc.title='Encomenda '+D.nome;
   doc.getElementById('nome').textContent=D.nome;
-  doc.getElementById('sub').textContent='Proposta de encomenda Pharmadiet · '+String(D.data||'').split('-').reverse().join('/')+'. Ajuste as unidades: a caixa fica verde e o botão Finalizar acende quando chegar ao valor.';
+  doc.getElementById('sub').textContent='Proposta de encomenda Pharmadiet · '+String(D.data||'').split('-').reverse().join('/');
+  var ex=doc.getElementById('ex');
+  ['Mude as unidades com − e +, ou escreva o número.',
+   AUTO?'As outras linhas '+(N>1?'desta encomenda ':'')+'acertam-se sozinhas para fechar o valor. As que mudou ficam fixas, a azul. Repor volta à proposta inicial.':null,
+   'A caixa fica verde e o botão Finalizar acende quando chegar ao valor.'].forEach(function(t){if(t)ex.appendChild(mk('div',null,t));});
   if(DUAS){var mo=doc.getElementById('modos');
     [['base','Base + Novos'],['total','Base']].forEach(function(o){var b=mk('button','ch',o[1]);b.id='m_'+o[0];b.onclick=function(){modo(o[0]);};mo.appendChild(b);});
     mo.appendChild(mk('div','mx',null)).id='mx';}
@@ -34,7 +42,10 @@
         var p=mk('button','s','+');p.onclick=function(){mexe(i,1);};g.appendChild(m);g.appendChild(n);g.appendChild(p);q.appendChild(v);q.appendChild(g);}
       tr.appendChild(q);});
     tb.appendChild(tr);});
-  function copia(){return D.linhas.map(function(l){return l.u.slice();});}
+  /* As unidades de partida do modo `MO`: as do ecra (`u`) ou, no outro modo, as que a app
+     proporia (`o`). Link sem `o` (de antes): sempre as `u`. */
+  function copia(){FX=D.linhas.map(function(l){return l.u.map(function(){return false;});});
+    return D.linhas.map(function(l){return (MO!==M0&&l.o?l.o:l.u).slice();});}
   var Q=copia();
   function tl(i){var s=0;for(var k=0;k<N;k++)s+=Q[i][k];return s;}
   function eur(x){return x.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
@@ -55,14 +66,40 @@
     D.linhas.forEach(function(l,i){
       for(var k=0;k<N;k++){var on=k===K;doc.getElementById('c'+i+'_'+k).className='q'+(on&&N>1?' on':'');
         if(l.t){doc.getElementById('b'+i+'_'+k).textContent=Q[i][k];continue;}
-        var el=doc.getElementById('q'+i+'_'+k);if(doc.activeElement!==el)el.value=Q[i][k];
+        var el=doc.getElementById('q'+i+'_'+k);if(doc.activeElement!==el)el.value=Q[i][k];el.className='n'+(FX[i][k]?' fx':'');
         doc.getElementById('v'+i+'_'+k).textContent=Q[i][k];
         doc.getElementById('v'+i+'_'+k).style.display=on?'none':'';doc.getElementById('g'+i+'_'+k).style.display=on?'':'none';}});
     for(var k=0;k<N;k++){var c=doc.getElementById('e'+k);if(c)c.className='ch'+(k===K?' on':'');if(N>1)doc.getElementById('h'+k).className=k===K?'on':'';}}
+  /* As bolsas sao as da app: no Base + Novos, cada produto novo com falta cobre-se com as linhas
+     dele (mais a margem em unidades) e a base com as outras (mais a margem dela) -- bolsas separadas,
+     como na app: Hepatosil a mais nao tira da base. No Base e uma bolsa so. O alvo da encomenda `k` e o da
+     bolsa menos o que as OUTRAS encomendas ja levam. */
+  /* `so` = a linha mexida: so se reajusta a bolsa DELA. As outras bolsas nao mudaram nada, e
+     recalcula-las a partir do que esta no ecra dava 1 ou 2 unidades diferentes das da app. */
+  function reajusta(k,so){if(!AUTO)return;
+    function livre(i){return !D.linhas[i].t&&!FX[i][k]&&D.linhas[i].v>0;}
+    function val(f,quais){var s=0;D.linhas.forEach(function(l,i){if(!f(l))return;for(var j=0;j<N;j++){if((quais==='k'&&j!==k)||(quais==='outras'&&j===k))continue;s+=l.v*Q[i][j];}});return s;}
+    function fixoK(f){var s=0;D.linhas.forEach(function(l,i){if(f(l)&&!livre(i))s+=l.v*Q[i][k];});return s;}
+    function aloca(lista,f,alvo){var a=alvo-val(f,'outras'),fx=fixoK(f);
+      if(!(a>fx))lista.forEach(function(x){x.r.sug=0;});else sugFechoAlocar(lista,a,fx);
+      lista.forEach(function(x){Q[x.i][k]=x.r.sug;});}
+    function bolsa(f,alvo){var lista=[];
+      D.linhas.forEach(function(l,i){if(f(l)&&livre(i))lista.push({i:i,net:l.v,r:{sug:Q[i][k],avg:l.a||0}});});
+      aloca(lista,f,alvo);return lista;}
+    var lm=so!=null?D.linhas[so]:null;
+    if(MO==='total'){bolsa(function(){return true;},D.alvoT+sugFechoMargem(D.alvoT));return;}
+    var NG={};D.novos.forEach(function(n){NG[n.g]=1;});
+    D.novos.forEach(function(n){var f=function(l){return l.g===n.g;};if(lm&&!f(lm))return;
+      var dentro=bolsa(f,n.f).filter(function(x){return x.r.sug>0;}),m=sugFechoMargemNovos(dentro);
+      if(m>0)aloca(dentro,f,n.f+m);});
+    var fb=function(l){return !NG[l.g];};if(!lm||fb(lm))bolsa(fb,D.bf+sugFechoMargem(D.alvo));
+  }
   function escolhe(k){K=k;pinta();}
-  function modo(m){if(!DUAS)return;MO=m==='total'?'total':'base';pinta();}
-  function mexe(i,d){if(D.linhas[i].t)return;Q[i][K]=Math.max(0,(Q[i][K]|0)+d);pinta();}
-  function poe(i,v){if(D.linhas[i].t)return;v=parseInt(v,10);Q[i][K]=isNaN(v)||v<0?0:v;pinta();}
+  /* Trocar de modo faz o que a app faz: volta a proposta desse modo e solta as linhas mexidas. */
+  function modo(m){if(!DUAS)return;MO=m==='total'?'total':'base';
+    if(D.linhas.every(function(l){return !!l.o;}))Q=copia();else reajusta(K);pinta();}
+  function mexe(i,d){if(D.linhas[i].t)return;Q[i][K]=Math.max(0,(Q[i][K]|0)+d);FX[i][K]=true;reajusta(K,i);pinta();}
+  function poe(i,v){if(D.linhas[i].t)return;v=parseInt(v,10);Q[i][K]=isNaN(v)||v<0?0:v;FX[i][K]=true;reajusta(K,i);pinta();}
   function repor(){Q=copia();pinta();}
   function texto(){var B=[];for(var k=0;k<N;k++){var L=[];D.linhas.forEach(function(l,i){if(Q[i][k]>0)L.push((l.c?l.c+' - ':'')+l.d+': '+Q[i][k]+' un');});
       if(L.length)B.push((N>1?'Entrega '+(k+1)+' ('+D.ent[k].d+'):\n':'')+L.join('\n'));}
@@ -78,9 +115,80 @@
   function copiar(){var t=texto(),m=doc.getElementById('msg');
     if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){m.textContent='Copiado. Cole num email para '+D.para+'.';},function(){mostra(t);});
     else mostra(t);}
-  window.mexe=mexe;window.poe=poe;window.escolhe=escolhe;window.modo=modo;window.repor=repor;window.finalizar=finalizar;window.copiar=copiar;window.__estado=estado;window.__texto=texto;window.__Q=function(){return Q;};
+  window.mexe=mexe;window.poe=poe;window.escolhe=escolhe;window.modo=modo;window.repor=repor;window.finalizar=finalizar;window.copiar=copiar;window.__estado=estado;window.__texto=texto;window.__Q=function(){return Q;};window.__FX=function(){return FX;};
   pinta();
-};(function sugFichArranque(){
+};var SUG_FECHO_MARGEM_EUR=100,SUG_FECHO_MARGEM_PCT=0.06,SUG_FECHO_MARGEM_MIN_PCT=0.03,SUG_FECHO_MARGEM_NOVOS_UN=1.5;
+function sugFechoMargem(falta){
+  const f=Math.max(0,falta||0);
+  return Math.max(Math.min(SUG_FECHO_MARGEM_EUR,f*SUG_FECHO_MARGEM_PCT),f*SUG_FECHO_MARGEM_MIN_PCT);
+}
+function sugFechoMargemNovos(livres){
+  if(!livres||!livres.length)return 0;
+  let m=Infinity;for(let i=0;i<livres.length;i++){const n=livres[i].net;if(n>0&&n<m)m=n;}
+  return m===Infinity?0:m*SUG_FECHO_MARGEM_NOVOS_UN;
+}
+function sugFechoValor(lista){let t=0;for(let i=0;i<lista.length;i++)t+=lista[i].net*lista[i].r.sug;return t;}
+function sugFechoPisoItens(lista){return lista.filter(x=>x.r&&x.r.avg>0&&x.net>0);}
+function sugFechoPisoCabe(lista,alvo,jaFeito){
+  const itens=sugFechoPisoItens(lista);
+  if(!itens.length||!(alvo>0))return false;
+  let custo=jaFeito||0;
+  for(let i=0;i<itens.length;i++)custo+=itens[i].net;
+  return custo<=alvo+1e-9;
+}
+function sugFechoSemeiaValor(itens,k){
+  let v=0;for(let i=0;i<itens.length;i++)v+=Math.max(1,Math.round(k*itens[i].r.avg))*itens[i].net;
+  return v;
+}
+function sugFechoSemear(lista,alvo,jaFeito){
+  const itens=sugFechoPisoItens(lista);
+  if(!itens.length||!(alvo>0))return false;
+  if(!sugFechoPisoCabe(lista,alvo,jaFeito))return false;
+  const cabe=(alvo-(jaFeito||0));
+  /* Bisseccao sobre o k: 40 voltas chegam para o separar ao milesimo em qualquer escala. O topo
+     comeca em 1 e duplica enquanto couber, para nao fixar um teto que um cliente grande passe. */
+  let lo=0,hi=1;
+  for(let i=0;i<30&&sugFechoSemeiaValor(itens,hi)<=cabe;i++)hi*=2;
+  for(let i=0;i<40;i++){const m=(lo+hi)/2;if(sugFechoSemeiaValor(itens,m)<=cabe)lo=m;else hi=m;}
+  itens.forEach(x=>{x.piso=1;x.r.sug=Math.max(1,Math.round(lo*x.r.avg));});
+  /* As linhas sem historico voltam a zero: a semeadura e sobre o consumo, e o que elas tinham
+     vinha do reparto em euros, que acabou de ser substituido. */
+  lista.forEach(x=>{if(itens.indexOf(x)===-1&&!x.fixa)x.r.sug=0;});
+  return true;
+}
+function sugFechoAlocar(lista,alvo,jaFeito){
+  if(!lista.length||!(alvo>0))return;
+  sugFechoSemear(lista,alvo,jaFeito);
+  /* 🔴 SO SE ACRESCENTA O QUE ELE JA COMPRA (Bruno, 26/09/2026). A lista de um grupo traz TODAS
+     as apresentacoes (`seedPresentations`), e o alocador escolhia entre todas: com uma falta menor
+     do que uma unidade de qualquer referencia dele, ia a mais BARATA do grupo -- mesmo uma que ele
+     nunca comprou (2 x 32 EUR de uma apresentacao nova em vez de 2 x 52 EUR da dele; e 8 x 6 EUR
+     de uma que ele nao conhece, numa busca ao acaso). Regra: as unidades a acrescentar saem das
+     referencias que ele compra (`avg>0`) -- a que fecha sem passar, senao a mais barata DELAS; so
+     se ele nao comprar NENHUMA do grupo (um produto novo a serio) e que entram as outras.
+     O corte a seguir continua sobre a lista toda: tirar nunca abre uma referencia. */
+  const _dele=sugFechoPisoItens(lista),cand=_dele.length?_dele:lista;
+  let v=(jaFeito||0)+sugFechoValor(lista),guarda=0;
+  while(v<alvo-1e-9&&guarda++<20000){
+    const resto=alvo-v;let esc=null;
+    for(let i=0;i<cand.length;i++){const x=cand[i];if(x.net<=resto+1e-9&&(!esc||x.net>esc.net))esc=x;}
+    if(!esc)for(let i=0;i<cand.length;i++){const x=cand[i];if(!esc||x.net<esc.net)esc=x;}
+    if(!esc)break;
+    esc.r.sug++;v+=esc.net;
+  }
+  /* E TAMBEM TIRA (Bruno, 2026-09-18): acrescentar uma referencia que o cliente nao compra tem de
+     sair de algum lado, senao a encomenda cresce por cima do objetivo -- e o objetivo e o que ele
+     tem de comprar, nao um minimo a que se vai somando. Tira-se das linhas LIVRES, a maior que
+     ainda cabe na sobra, e para-se antes de descer abaixo do alvo: o que ele escreveu a mao nao
+     se toca, o resto e que se aperta. */
+  while(v>alvo+1e-9&&guarda++<20000){
+    const sobra=v-alvo;let esc=null;
+    for(let i=0;i<lista.length;i++){const x=lista[i];if(x.r.sug>(x.piso||0)&&x.net<=sobra+1e-9&&(!esc||x.net>esc.net))esc=x;}
+    if(!esc)break;
+    esc.r.sug--;v-=esc.net;
+  }
+}
+(function sugFichArranque(){
   /* abrir OUTRO link com a pagina ja aberta so muda o `#` -- sem recarregar ficava a encomenda velha */
   window.addEventListener('hashchange',function(){location.reload();});
   function b64(s){s=s.replace(/-/g,'+').replace(/_/g,'/');while(s.length%4)s+='=';var r=atob(s),u=new Uint8Array(r.length);for(var i=0;i<r.length;i++)u[i]=r.charCodeAt(i);return u;}
