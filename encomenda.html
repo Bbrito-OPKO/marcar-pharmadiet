@@ -1,9 +1,16 @@
-<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Encomenda</title><style>*{box-sizing:border-box}body{margin:0;background:#F6F8FB;font-family:Arial,Helvetica,sans-serif;color:#39414D}.w{max-width:720px;margin:0 auto;padding:16px}h1{font-size:20px;color:#103F72;margin:4px 0 2px}.sub{font-size:13px;color:#6C7889;margin-bottom:14px}.falta{position:sticky;top:0;z-index:2;background:#fff;border:1px solid #DEE5EE;border-radius:12px;padding:12px 14px;margin-bottom:12px}.big{font-size:22px;font-weight:800;color:#E2920F}.bar{height:8px;background:#EEF2F7;border-radius:6px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:#E2920F}.ok .big{color:#557617}.ok .bar i{background:#6E9A1E}.nv{font-size:12px;color:#6C7889;margin-top:4px}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #DEE5EE;border-radius:12px;overflow:hidden}td,th{padding:9px 8px;border-bottom:1px solid #EEF2F7;font-size:14px}td.q{text-align:center;white-space:nowrap}th{background:#175FAA;color:#fff;font-size:12px;font-weight:700;text-align:center;white-space:nowrap}th.p,td.p{text-align:left;white-space:normal;min-width:110px}th .dt{font-size:11px;font-weight:400;opacity:.85}th[id]{cursor:pointer}th.on{background:#103F72}td.on{background:#EEF4FB}span.v{display:inline-block;min-width:34px;padding:6px 0;cursor:pointer}.tw{overflow-x:auto;border-radius:12px}button.s{width:30px;height:32px;border-radius:10px;border:1px solid #DEE5EE;background:#fff;font-size:18px;color:#134F8E;cursor:pointer}input.n{width:46px;height:32px;text-align:center;font-size:16px;border:1px solid #DEE5EE;border-radius:10px;margin:0 3px}.tr{font-size:11px;color:#98A4B5}textarea{width:100%;min-height:60px;margin:12px 0;padding:8px;border:1px solid #DEE5EE;border-radius:10px;font:inherit;font-size:16px}.acts{display:flex;gap:10px;flex-wrap:wrap}.acts button{height:40px;padding:0 18px;border-radius:20px;font-weight:700;font-size:14px;cursor:pointer}#fin{border:1.5px solid #6E9A1E;background:#F3F9E7;color:#557617}#fin:disabled{opacity:.45;cursor:not-allowed}.sec{border:1.5px solid #DEE5EE;background:#fff;color:#39414D}#msg{font-size:12px;color:#557617;margin-top:8px;min-height:15px}.ents{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.ents:empty{display:none}.ch{height:34px;padding:0 10px;border-radius:17px;border:1.5px solid #DEE5EE;background:#fff;color:#39414D;font-weight:700;font-size:12px;cursor:pointer}.ch.on{background:#134F8E;border-color:#134F8E;color:#fff}</style></head><body><div class="w"><h1 id="nome"></h1><div class="sub" id="sub"></div><div id="fb" class="falta"><div id="big" class="big"></div><div class="bar"><i id="bi"></i></div><div id="nv" class="nv"></div></div><div id="ents" class="ents"></div><div class="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div><textarea id="obs" placeholder="Observações (opcional)"></textarea><div class="acts"><button id="fin" onclick="finalizar()">Finalizar e enviar por email</button><button class="sec" onclick="copiar()">Copiar</button><button class="sec" onclick="repor()">Repor</button></div><div id="msg"></div><textarea id="txt" readonly style="display:none;min-height:160px"></textarea></div><script>var __PAGINA__=function sugFichPagina(){
+<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Encomenda</title><style>*{box-sizing:border-box}body{margin:0;background:#F6F8FB;font-family:Arial,Helvetica,sans-serif;color:#39414D}.w{max-width:720px;margin:0 auto;padding:16px}h1{font-size:20px;color:#103F72;margin:4px 0 2px}.sub{font-size:13px;color:#6C7889;margin-bottom:14px}.falta{position:sticky;top:0;z-index:2;background:#fff;border:1px solid #DEE5EE;border-radius:12px;padding:12px 14px;margin-bottom:12px}.big{font-size:22px;font-weight:800;color:#D24A3D}.bar{height:8px;background:#EEF2F7;border-radius:6px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:#D24A3D}.falta.mau{border-color:#D24A3D;background:#FBE9E7}.falta.ok{border-color:#6E9A1E;background:#F3F9E7}.ok .big{color:#557617}.ok .bar i{background:#6E9A1E}td.p.nao{color:#B23A2F;box-shadow:inset 4px 0 0 #D24A3D}td.p.sim{color:#557617;box-shadow:inset 4px 0 0 #6E9A1E}.mx{flex-basis:100%;font-size:12px;color:#6C7889}.nv{font-size:12px;color:#6C7889;margin-top:4px}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #DEE5EE;border-radius:12px;overflow:hidden}td,th{padding:9px 8px;border-bottom:1px solid #EEF2F7;font-size:14px}td.q{text-align:center;white-space:nowrap}th{background:#175FAA;color:#fff;font-size:12px;font-weight:700;text-align:center;white-space:nowrap}th.p,td.p{text-align:left;white-space:normal;min-width:110px}th .dt{font-size:11px;font-weight:400;opacity:.85}th[id]{cursor:pointer}th.on{background:#103F72}td.on{background:#EEF4FB}span.v{display:inline-block;min-width:34px;padding:6px 0;cursor:pointer}.tw{overflow-x:auto;border-radius:12px}button.s{width:30px;height:32px;border-radius:10px;border:1px solid #DEE5EE;background:#fff;font-size:18px;color:#134F8E;cursor:pointer}input.n{width:46px;height:32px;text-align:center;font-size:16px;border:1px solid #DEE5EE;border-radius:10px;margin:0 3px}.tr{font-size:11px;color:#98A4B5}textarea{width:100%;min-height:60px;margin:12px 0;padding:8px;border:1px solid #DEE5EE;border-radius:10px;font:inherit;font-size:16px}.acts{display:flex;gap:10px;flex-wrap:wrap}.acts button{height:40px;padding:0 18px;border-radius:20px;font-weight:700;font-size:14px;cursor:pointer}#fin{border:1.5px solid #6E9A1E;background:#F3F9E7;color:#557617}#fin:disabled{opacity:.45;cursor:not-allowed}.sec{border:1.5px solid #DEE5EE;background:#fff;color:#39414D}#msg{font-size:12px;color:#557617;margin-top:8px;min-height:15px}.ents{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.ents:empty{display:none}.ch{height:34px;padding:0 10px;border-radius:17px;border:1.5px solid #DEE5EE;background:#fff;color:#39414D;font-weight:700;font-size:12px;cursor:pointer}.ch.on{background:#134F8E;border-color:#134F8E;color:#fff}</style></head><body><div class="w"><h1 id="nome"></h1><div class="sub" id="sub"></div><div id="modos" class="ents"></div><div id="fb" class="falta"><div id="big" class="big"></div><div class="bar"><i id="bi"></i></div><div id="nv" class="nv"></div></div><div id="ents" class="ents"></div><div class="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div><textarea id="obs" placeholder="Observações (opcional)"></textarea><div class="acts"><button id="fin" onclick="finalizar()">Finalizar e enviar por email</button><button class="sec" onclick="copiar()">Copiar</button><button class="sec" onclick="repor()">Repor</button></div><div id="msg"></div><textarea id="txt" readonly style="display:none;min-height:160px"></textarea></div><script>var __PAGINA__=function sugFichPagina(){
   var N=D.ent.length,K=0,doc=document;
+  /* O MODO E DO CLIENTE (Bruno, 16/10/2026): "Base + Novos" (o total e cada produto novo com o
+     minimo dele) ou "Base" (um valor so, os novos la dentro). So aparece a escolha quando as duas
+     dao contas diferentes; um link de antes (sem `alvoT`) fica no Base + Novos, como era. */
+  var DUAS=D.alvoT!=null&&(D.novos.length>0||Math.abs(D.alvo-D.alvoT)>=0.005),MO=DUAS&&D.m==='total'?'total':'base';
   function mk(tag,cls,txt){var e=doc.createElement(tag);if(cls)e.className=cls;if(txt!=null)e.textContent=txt;return e;}
   doc.title='Encomenda '+D.nome;
   doc.getElementById('nome').textContent=D.nome;
-  doc.getElementById('sub').textContent='Proposta de encomenda Pharmadiet · '+String(D.data||'').split('-').reverse().join('/')+'. Ajuste as unidades: o botão Finalizar acende quando chegar ao valor.';
+  doc.getElementById('sub').textContent='Proposta de encomenda Pharmadiet · '+String(D.data||'').split('-').reverse().join('/')+'. Ajuste as unidades: a caixa fica verde e o botão Finalizar acende quando chegar ao valor.';
+  if(DUAS){var mo=doc.getElementById('modos');
+    [['base','Base + Novos'],['total','Base']].forEach(function(o){var b=mk('button','ch',o[1]);b.id='m_'+o[0];b.onclick=function(){modo(o[0]);};mo.appendChild(b);});
+    mo.appendChild(mk('div','mx',null)).id='mx';}
   /* A TABELA TEM A FORMA DA DO ECRA (Bruno, 24/09/2026): uma coluna por encomenda, com a data
      por baixo (o Total saiu a 25/09, a pedido). Os - e + so aparecem na encomenda escolhida (os botoes
      por cima ou o titulo da coluna); nas outras fica o numero, e tocar nele muda para ela --
@@ -15,7 +22,7 @@
     if(N>1){h.appendChild(mk('div','dt',e.d));h.onclick=function(){escolhe(k);};}hr.appendChild(h);});
   th.appendChild(hr);
   var tb=doc.getElementById('tb');
-  D.linhas.forEach(function(l,i){var tr=mk('tr'),a=mk('td','p',l.d);
+  D.linhas.forEach(function(l,i){var tr=mk('tr'),a=mk('td','p',l.d);a.id='p'+i;
     if(l.t)a.appendChild(mk('div','tr','quantidade da campanha'));
     tr.appendChild(a);
     D.ent.forEach(function(e,k){var q=mk('td','q');q.id='c'+i+'_'+k;
@@ -32,12 +39,18 @@
   function tl(i){var s=0;for(var k=0;k<N;k++)s+=Q[i][k];return s;}
   function eur(x){return x.toLocaleString('pt-PT',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';}
   function soma(g){var s=0;D.linhas.forEach(function(l,i){if(g===undefined||l.g===g)s+=l.v*tl(i);});return s;}
-  function estado(){var t=soma(),falta=Math.max(0,D.alvo-t),ok=falta<0.005,nv=[];
-    D.novos.forEach(function(n){var fx=Math.max(0,n.f-soma(n.g));if(fx>=0.005){ok=false;nv.push(n.g+': faltam '+eur(fx));}});
-    return {t:t,falta:falta,ok:ok,nv:nv};}
-  function pinta(){var e=estado();doc.getElementById('fb').className='falta'+(e.ok?' ok':'');
+  function alvo(){return MO==='total'?D.alvoT:D.alvo;}
+  function estado(){var t=soma(),falta=Math.max(0,alvo()-t),ok=falta<0.005,nv=[],gr={};
+    if(MO!=='total')D.novos.forEach(function(n){var fx=Math.max(0,n.f-soma(n.g));gr[n.g]=fx<0.005;if(fx>=0.005){ok=false;nv.push(n.g+': faltam '+eur(fx));}});
+    return {t:t,falta:falta,ok:ok,nv:nv,gr:gr,modo:MO};}
+  function pinta(){var e=estado();doc.getElementById('fb').className='falta'+(e.ok?' ok':' mau');
+    if(DUAS){['base','total'].forEach(function(m){doc.getElementById('m_'+m).className='ch'+(m===MO?' on':'');});
+      doc.getElementById('mx').textContent=MO==='total'?'Um valor só: todos os produtos contam, os novos também.':'O valor da base, e cada produto novo com o seu mínimo.';}
+    /* Cada produto novo pinta-se pelo grupo dele: verde com o minimo cumprido, vermelho sem. No
+       modo Base nao ha minimo por produto, e a linha fica sem cor. */
+    D.linhas.forEach(function(l,i){var c=l.g&&(l.g in e.gr)?(e.gr[l.g]?' sim':' nao'):'';doc.getElementById('p'+i).className='p'+c;});
     doc.getElementById('big').textContent=e.ok?'Objetivo atingido ✓':(e.falta>=0.005?'Faltam '+eur(e.falta):'Faltam os produtos abaixo');
-    doc.getElementById('bi').style.width=(D.alvo>0?Math.min(100,e.t/D.alvo*100):100)+'%';
+    doc.getElementById('bi').style.width=(alvo()>0?Math.min(100,e.t/alvo()*100):100)+'%';
     doc.getElementById('nv').textContent=e.nv.join(' · ');doc.getElementById('fin').disabled=!e.ok;
     D.linhas.forEach(function(l,i){
       for(var k=0;k<N;k++){var on=k===K;doc.getElementById('c'+i+'_'+k).className='q'+(on&&N>1?' on':'');
@@ -47,13 +60,14 @@
         doc.getElementById('v'+i+'_'+k).style.display=on?'none':'';doc.getElementById('g'+i+'_'+k).style.display=on?'':'none';}});
     for(var k=0;k<N;k++){var c=doc.getElementById('e'+k);if(c)c.className='ch'+(k===K?' on':'');if(N>1)doc.getElementById('h'+k).className=k===K?'on':'';}}
   function escolhe(k){K=k;pinta();}
+  function modo(m){if(!DUAS)return;MO=m==='total'?'total':'base';pinta();}
   function mexe(i,d){if(D.linhas[i].t)return;Q[i][K]=Math.max(0,(Q[i][K]|0)+d);pinta();}
   function poe(i,v){if(D.linhas[i].t)return;v=parseInt(v,10);Q[i][K]=isNaN(v)||v<0?0:v;pinta();}
   function repor(){Q=copia();pinta();}
   function texto(){var B=[];for(var k=0;k<N;k++){var L=[];D.linhas.forEach(function(l,i){if(Q[i][k]>0)L.push((l.c?l.c+' - ':'')+l.d+': '+Q[i][k]+' un');});
       if(L.length)B.push((N>1?'Entrega '+(k+1)+' ('+D.ent[k].d+'):\n':'')+L.join('\n'));}
     var o=(doc.getElementById('obs').value||'').trim();
-    return 'Encomenda '+D.nome+' (NIF '+D.nif+')\n\n'+B.join('\n\n')+(o?'\n\nObservações: '+o:'');}
+    return 'Encomenda '+D.nome+' (NIF '+D.nif+')'+(DUAS?'\nModo: '+(MO==='total'?'Base':'Base + Novos'):'')+'\n\n'+B.join('\n\n')+(o?'\n\nObservações: '+o:'');}
   function finalizar(){if(!estado().ok)return;var s='Encomenda '+D.nome+' (NIF '+D.nif+')';
     location.href='mailto:'+D.para+'?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(texto());
     doc.getElementById('msg').textContent='Se o email não abriu, carregue em Copiar e cole num email para '+D.para+'.';}
@@ -64,7 +78,7 @@
   function copiar(){var t=texto(),m=doc.getElementById('msg');
     if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){m.textContent='Copiado. Cole num email para '+D.para+'.';},function(){mostra(t);});
     else mostra(t);}
-  window.mexe=mexe;window.poe=poe;window.escolhe=escolhe;window.repor=repor;window.finalizar=finalizar;window.copiar=copiar;window.__estado=estado;window.__texto=texto;window.__Q=function(){return Q;};
+  window.mexe=mexe;window.poe=poe;window.escolhe=escolhe;window.modo=modo;window.repor=repor;window.finalizar=finalizar;window.copiar=copiar;window.__estado=estado;window.__texto=texto;window.__Q=function(){return Q;};
   pinta();
 };(function sugFichArranque(){
   /* abrir OUTRO link com a pagina ja aberta so muda o `#` -- sem recarregar ficava a encomenda velha */
