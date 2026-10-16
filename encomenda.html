@@ -13,10 +13,9 @@
   doc.getElementById('nome').textContent=D.nome;
   doc.getElementById('sub').textContent='Proposta de encomenda Pharmadiet · '+String(D.data||'').split('-').reverse().join('/');
   var ex=doc.getElementById('ex');
-  /* O TEXTO CURTO (Bruno, 16/10/2026: "tenta resumir mais o texto inicial"). Sem os cartoes das
-     encomendas, muda-se de encomenda tocando no titulo da coluna -- e por isso a 2.a linha. */
+  /* O TEXTO CURTO (Bruno, 16/10/2026: "tenta resumir mais o texto inicial"). A linha "Toque no
+     titulo de uma encomenda para a mudar" saiu no mesmo dia, a pedido dele. */
   [AUTO?'Mude as unidades com − e +: as outras acertam-se sozinhas (as que mudou ficam a azul).':'Mude as unidades com − e +.',
-   N>1?'Toque no título de uma encomenda para a mudar.':null,
    'Verde: pronto a enviar.'].forEach(function(t){if(t)ex.appendChild(mk('div',null,t));});
   if(DUAS){var mo=doc.getElementById('modos');
     [['base','Base + Novos'],['total','Base']].forEach(function(o){var b=mk('button','ch',o[1]);b.id='m_'+o[0];b.onclick=function(){modo(o[0]);};mo.appendChild(b);});
