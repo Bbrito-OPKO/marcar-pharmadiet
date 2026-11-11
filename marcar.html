@@ -85,6 +85,17 @@
   .btn.cal{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
   .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
   .err{color:#C0392B;font-size:14px}
+  /* v:3 (11/11/2026, fase 3): as 3 horas reservadas -- um botao grande por hora, sem calendario */
+  .tres-h1{white-space:normal}
+  .hint3{color:var(--muted);font-size:14px;line-height:1.5;margin:-8px 0 12px}
+  .tres{display:flex;flex-direction:column;gap:10px;max-width:420px}
+  .opc{border:1.5px solid transparent;background:#EAF2FB;border-radius:14px;padding:14px 16px;font-size:16px;font-weight:800;color:var(--navy);cursor:pointer;text-align:left;font-family:inherit;transition:.15s;min-height:52px}
+  .opc .opc-wd{text-transform:capitalize}
+  @media (hover:hover){.opc:hover{border-color:#9CC0E8}}
+  .opc.sel{background:var(--navy);color:#fff}
+  .opc:active{transform:scale(.98)}
+  .confbtn.tres-conf,.tres-err{max-width:420px}
+  .tres-livre{margin-top:6px;max-width:420px}
   @media(max-width:759.98px){
     .panes{gap:0 12px;min-height:300px}
     h1{font-size:13px;margin-bottom:14px}   /* 14px foi testado e TRANSBORDA a 320px (o h1 é nowrap e puxa a coluna do calendário) */
@@ -405,6 +416,43 @@ function render(payloadPronto){
       if(first){first=false;timesEl.scrollIntoView({behavior:'smooth',block:'nearest'});}
     }
     draw();
+  }
+  /* v:3 -- AS HORAS RESERVADAS (11/11/2026, fase 3 do desenho "3 horas reservadas"). O link leva SO as
+     horas guardadas para este cliente (uma por dia; 3, ou 2 quando nao ha maneira de fazer 3). Em vez
+     do calendario: um botao por hora e, por baixo, "Nenhuma da -- propor outro dia/hora", que abre o
+     seletor livre de sempre (`pickFreeDay`: o pedido vai com `ap=1` e cai nas Sugestoes do Bruno). O
+     toque numa hora SELECIONA; o botao verde de baixo e que envia -- o mesmo passo de confirmacao dos
+     chips, pela mesma razao (um toque acidental no telemovel nao marca nada). As horas que ja passaram
+     ja sairam no `semPassado`. Os links v:2 e anteriores nao passam aqui: continuam com o calendario.
+     Corre no FIM do `render` de proposito: o `_tentativas` e o `NOTA_PEND` (que o `enviar` e o
+     `pickFreeDay` usam) so ficam com valor depois de declarados mais acima. */
+  if(data.v>=3){
+    var opc=[]; dates.forEach(function(iso){byDate[iso].starts.forEach(function(t){opc.push(iso+'T'+t);});});
+    var selO=null, errO=false;
+    var drawTres=function(){
+      var hh='<h1 class="tres-h1">Olá! 👋 Guardei estas horas para si</h1><p class="hint3">Escolha a que lhe der mais jeito:</p><div class="tres">';
+      opc.forEach(function(o){var f=fmt(o);hh+='<button class="opc'+(o===selO?' sel':'')+'" type="button" data-o="'+o+'"><span class="opc-wd">'+f.wd+'</span>, '+f.dm+' às '+f.hr+'</button>';});
+      hh+='</div>';
+      if(errO){
+        hh+='<div class="senderr tres-err">Não foi possível enviar o pedido. Verifique a ligação e tente de novo — ou responda diretamente à mensagem que recebeu.</div>'
+          +'<button class="confbtn tres-conf" type="button">Tentar novamente</button>';
+      }else if(selO){
+        var fs=fmt(selO);
+        hh+='<button class="confbtn tres-conf" type="button">Confirmar — '+fs.wd.slice(0,3)+', '+fs.dm+' às '+fs.hr+'</button>';
+      }
+      hh+='<button class="altbtn" type="button">Nenhuma dá — propor outro dia/hora</button><div class="pane-times tres-livre" id="times"></div>';
+      card.innerHTML=hh;
+      timesEl=document.getElementById('times');
+      timesEl.style.borderLeft='none'; timesEl.style.padding='0';
+      card.querySelectorAll('.opc').forEach(function(b){b.onclick=function(){selO=b.getAttribute('data-o');errO=false;drawTres();};});
+      card.querySelectorAll('.confbtn.tres-conf').forEach(function(b){b.onclick=function(){enviar(selO,0,b,function(){errO=true;drawTres();});};});
+      card.querySelectorAll('.altbtn').forEach(function(b){b.onclick=function(){
+        selO=null; errO=false;
+        card.querySelectorAll('.opc').forEach(function(z){z.classList.remove('sel');});
+        card.querySelectorAll('.confbtn.tres-conf,.tres-err').forEach(function(z){z.parentNode.removeChild(z);});
+        pickFreeDay();};});
+    };
+    drawTres();
   }
 }
 /* LINK CURTO (2026-07-27). Dois formatos de link, e os dois têm de continuar a funcionar:
