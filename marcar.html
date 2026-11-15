@@ -158,10 +158,17 @@ function icsHref(c,isoT){var p=isoT.split('T');var d=p[0].replace(/-/g,'');var t
   return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(txt);}
 function lsGet(k){try{return localStorage.getItem(k);}catch(_){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}
-function render(payloadPronto){
+function render(payloadPronto,viva,abrirDia){
   var card=document.getElementById('card');
   // payloadPronto = JSON vindo do relé (link CURTO, ?i=<id>). Sem ele, lê-se o ?q= de sempre.
   var data=payloadPronto?dec2(payloadPronto):dec(new URLSearchParams(location.search).get('q'));
+  /* AGENDA VIVA (links v:4, 15/11/2026). `viva` = {b,d} que o relé respondeu ao `action=agenda` (já
+     validado pelo `agendaBoa`): desenha-se ESSE em vez do b/d do payload, que fica como recurso. Sem
+     `viva` (o relé não respondeu) o v:4 desenha-se exatamente como um v:2. `abrirDia` = o dia que
+     estava aberto quando o relé disse `ocupada` (volta a abrir-se, sem mensagem nenhuma).
+     DADO = o payload tal como veio: é dele que sai o `id` e o recurso quando a 2.ª leitura falha. */
+  var DADO=data;
+  if(data&&data.v===4&&viva){data={};for(var kk in DADO){if(Object.prototype.hasOwnProperty.call(DADO,kk))data[kk]=DADO[kk];}data.b=viva.b;data.d=viva.d;}
   // byDate = {iso:{starts,exA,exP}} (listas de 'HH:MM').
   // Formato do dia: [offset,[horas]] (2 elementos, links v:2 de 2026-07-27+) · [offset,[normal],
   // [exA],[exP]] (4 elementos, links 2026-07-23..26, sugestões de hora por chips) · [offset,
@@ -197,6 +204,7 @@ function render(payloadPronto){
      "Pedido enviado". Hoje: dia anterior a hoje sai, e hoje só ficam as horas ainda por vir.
      Um link que fica sem nada diz que JÁ PASSOU (é outra coisa de um link estragado). */
   var tinhaDatas=Object.keys(byDate).some(function(k){return byDate[k].starts.length;});
+  if(data!==DADO&&DADO.d&&DADO.d.length)tinhaDatas=true;   // v:4: o "já passou" sai do payload, nunca "link inválido"
   var _ag=new Date(), HOJE=isoOf(_ag), AGORA=m2h(_ag.getHours()*60+_ag.getMinutes());
   function semPassado(map){Object.keys(map).forEach(function(k){
     if(k<HOJE){delete map[k];return;}
@@ -204,8 +212,21 @@ function render(payloadPronto){
   semPassado(byDate); semPassado(altByDate);
   var dates=Object.keys(byDate).filter(function(k){return byDate[k].starts.length;}).sort();
   var altDates=Object.keys(altByDate).filter(function(k){var d2=altByDate[k];return (d2.starts.length||d2.exA.length||d2.exP.length)&&!byDate[k];}).sort();
-  if(!dates.length&&tinhaDatas){card.innerHTML='<h1>Este link já passou</h1><p class="warn">Os dias deste link já passaram. Por favor responda diretamente à mensagem que recebeu e combinamos outro dia.</p>';return;}
-  if(!dates.length){card.innerHTML='<h1>Link inválido</h1><p class="warn">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
+  /* v:4 com a lista viva VAZIA (as horas da zona levadas agora, o `dp` não deixou nada, ou a última
+     hora acabou de ir num `ocupada`) não é um link que passou: é o calendário de sempre sem dias
+     livres, com o "Nenhum destes dias dá jeito?" já aberto (o pedido vai às Sugestões). Sem texto
+     novo. Só se o próprio payload também já passou é que o v:4 diz "já passou". */
+  var vivaVazia=false;
+  if(data!==DADO&&!dates.length&&DADO.b&&Object.prototype.toString.call(DADO.d)==='[object Array]'){
+    var rec={}, bR=parseD(DADO.b); DADO.d.forEach(function(pr){addDia(rec,bR,pr);}); semPassado(rec);
+    vivaVazia=Object.keys(rec).some(function(k){return rec[k].starts.length;});}
+  /* Marcado neste aparelho num v:4: a confirmação ganha a tudo, também à lista viva vazia (a hora
+     dele saiu da lista por ser dele). O `done` é a mesma função de mais abaixo (declaração, sobe).
+     Os links antigos ficam pela ordem de sempre, mais abaixo. */
+  if(data&&data.v===4&&data.id){var prev4=lsGet('pharma_marcado_'+String(data.id));
+    if(prev4){SID=String(data.id);var pd4=prev4.indexOf('ap|')===0;done(pd4?prev4.slice(3):prev4,true,pd4);return;}}
+  if(!dates.length&&!vivaVazia&&tinhaDatas){card.innerHTML='<h1>Este link já passou</h1><p class="warn">Os dias deste link já passaram. Por favor responda diretamente à mensagem que recebeu e combinamos outro dia.</p>';return;}
+  if(!dates.length&&!vivaVazia){card.innerHTML='<h1>Link inválido</h1><p class="warn">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
   // (2026-07-22, decisao do Bruno) os botoes "Confirmar por WhatsApp/email" foram removidos:
   // o rele + confirmacao automatica fecham o ciclo; fica so o "Adicionar ao meu calendario".
   // NOVO (links v:2, 2026-07-27): os chips exA/exP e os dias alternativos pré-calculados
@@ -237,7 +258,11 @@ function render(payloadPronto){
   var prev=data.id?lsGet(LSK):null;
   if(prev){var pd=prev.indexOf('ap|')===0;done(pd?prev.slice(3):prev,true,pd);return;}
   // calendário 4 semanas (Seg–Sex) a partir da segunda da 1.ª semana com vaga (oferecida ou alternativa)
-  var start=parseD((altDates.length&&altDates[0]<dates[0])?altDates[0]:dates[0]); var off=(start.getDay()+6)%7; start.setDate(start.getDate()-off);
+  // v:4 com a lista viva vazia: a partir da semana de hoje (ao fim de semana, da seguinte)
+  var start;
+  if(vivaVazia){start=parseD(HOJE);if(start.getDay()===6)start.setDate(start.getDate()+2);else if(start.getDay()===0)start.setDate(start.getDate()+1);}
+  else start=parseD((altDates.length&&altDates[0]<dates[0])?altDates[0]:dates[0]);
+  var off=(start.getDay()+6)%7; start.setDate(start.getDate()-off);
   var cells=[]; for(var w=0;w<4;w++){for(var wd=0;wd<5;wd++){var dt=new Date(start);dt.setDate(dt.getDate()+w*7+wd);cells.push(isoOf(dt));}}
   var lastc=parseD(cells[cells.length-1]);
   var titulo=MES[start.getMonth()]+(start.getMonth()!==lastc.getMonth()?(' – '+MES[lastc.getMonth()]):'');
@@ -342,6 +367,7 @@ function render(payloadPronto){
       clearTimeout(tm); _sending=false;
       /* `used` depois de uma tentativa ANTERIOR desta mesma página (a rede caiu a meio e o
          pedido chegou): é o nosso pedido, não um link gasto por outra pessoa. */
+      if(j&&j.ok===false&&j.error==='ocupada'&&data.v===4){ocupada(isoT);return;}
       if(j&&j.ok===false&&!(j.error==='used'&&_tentativas>1)){recusado(j.error);return;}
       if(data.id)lsSet(LSK,(ap?'ap|':'')+isoT);
       done(isoT,false,!!ap);
@@ -351,6 +377,21 @@ function render(payloadPronto){
     });
   }
   var _tentativas=0;
+  /* `ocupada` (só links v:4): outro cliente levou a hora entre o abrir e o clique. Sem mensagem
+     (desenho §2.6: "o segundo vê a lista atualizada, sem aviso") -- volta a pedir-se a agenda e
+     redesenha-se no MESMO ecrã, com o mesmo dia aberto. O relé não gastou o id: o próximo pedido
+     leva o mesmo (o SID sai do `id` do payload). Se a 2.ª leitura falhar, tira-se só essa hora da
+     lista que estava no ecrã. */
+  function ocupada(isoT){
+    var dia=isoT.slice(0,10), hora=isoT.slice(11,16);
+    pedirAgenda(String(DADO.id||''),function(nova){
+      if(!nova){var b0=parseD(data.b);
+        nova={b:data.b,d:data.d.map(function(pr){var dt=new Date(b0);dt.setDate(dt.getDate()+pr[0]);
+          if(isoOf(dt)!==dia)return pr;
+          return [pr[0],pr[1].filter(function(v){return m2h(v<24?v*60:v)!==hora;})];})};}
+      render(payloadPronto,nova,dia);
+    });
+  }
   function lerResposta(r){
     if(!r||typeof r.json!=='function'||r.type==='opaque')return null;
     return Promise.resolve().then(function(){return r.json();}).then(function(j){return (j&&typeof j==='object')?j:null;},function(){return null;});
@@ -426,7 +467,7 @@ function render(payloadPronto){
      ja sairam no `semPassado`. Os links v:2 e anteriores nao passam aqui: continuam com o calendario.
      Corre no FIM do `render` de proposito: o `_tentativas` e o `NOTA_PEND` (que o `enviar` e o
      `pickFreeDay` usam) so ficam com valor depois de declarados mais acima. */
-  if(data.v>=3){
+  if(data.v===3){
     var opc=[]; dates.forEach(function(iso){byDate[iso].starts.forEach(function(t){opc.push(iso+'T'+t);});});
     var selO=null, errO=false;
     var drawTres=function(){
@@ -454,6 +495,9 @@ function render(payloadPronto){
     };
     drawTres();
   }
+  // v:4 depois de um `ocupada`: o dia que estava aberto volta a abrir-se, se ainda tiver horas
+  if(abrirDia&&data.v===4){card.querySelectorAll('.cell.avail').forEach(function(c){if(c.dataset.iso===abrirDia)pickDay(abrirDia,c);});}
+  if(vivaVazia)pickFreeDay();   // v:4 sem dias livres: o seletor de outro dia já aberto
 }
 /* LINK CURTO (2026-07-27). Dois formatos de link, e os dois têm de continuar a funcionar:
      ?q=<base64>  — o payload inteiro no URL (todos os links enviados até 27/07). Nada muda.
@@ -463,16 +507,44 @@ function render(payloadPronto){
    outra (rede/relé em baixo) e o cliente merece saber que o link está bom. */
 function dec2(s){ try{ return JSON.parse(s); }catch(e){ return null; } }
 function ecra(t,p){ document.getElementById('card').innerHTML='<h1>'+t+'</h1><p class="warn">'+p+'</p>'; }
+/* AGENDA VIVA (links v:4, 15/11/2026). Pede ao relé a lista viva da zona do link e chama cb({b,d}),
+   ou cb(null) se não vier nada que sirva: rede, `ok:false` (`sem agenda`, `notfound`...), resposta
+   ilegível, ou sem resposta em 6 s. Com null quem chama desenha o b/d do payload. cb uma vez só: a
+   resposta que chega depois do teto já não redesenha por cima. */
+function agendaBoa(j){
+  if(!(j&&j.ok===true&&typeof j.b==='string'&&/^\d{4}-\d\d-\d\d$/.test(j.b)&&Object.prototype.toString.call(j.d)==='[object Array]'))return false;
+  for(var n=0;n<j.d.length;n++){var pr=j.d[n];
+    if(Object.prototype.toString.call(pr)!=='[object Array]'||pr.length!==2||typeof pr[0]!=='number'||Object.prototype.toString.call(pr[1])!=='[object Array]')return false;
+    for(var m=0;m<pr[1].length;m++)if(typeof pr[1][m]!=='number')return false;}
+  return true;
+}
+function pedirAgenda(id,cb){
+  var feito=false, tm=null;
+  function fim(v){ if(feito)return; feito=true; clearTimeout(tm); cb(v); }
+  tm=setTimeout(function(){ fim(null); },6000);
+  try{
+    fetch(DEFAULT_R+'?action=agenda&i='+encodeURIComponent(id))
+      .then(function(r){ return r.json(); })
+      .then(function(j){ fim(agendaBoa(j)?{b:j.b,d:j.d}:null); },function(){ fim(null); });
+  }catch(e){ fim(null); }
+}
 function arranque(){
   var i=''; try{ i=new URLSearchParams(location.search).get('i')||''; }catch(e){}
-  if(!i){ render(); return; }                      // link ?q= de sempre
+  if(!i){                                          // link ?q= de sempre
+    var q=null; try{ q=dec(new URLSearchParams(location.search).get('q')); }catch(e){}
+    /* O LONGO v:4 nao tem payload guardado no rele: o `action=agenda` responde `notfound`, mostra-se o b/d do envio e o clique nao leva a validacao do `ocupada`. */
+    if(q&&q.v===4&&q.id){ ecra('Um momento…','A carregar as datas disponíveis.'); pedirAgenda(String(q.id),function(viva){ render(undefined,viva); }); return; }
+    render(); return;
+  }
   ecra('Um momento…','A carregar as datas disponíveis.');
   var to=setTimeout(function(){ ecra('Sem ligação','Não consegui carregar as datas. Verifique a ligação e volte a abrir o link, ou responda diretamente à mensagem.'); },15000);
   fetch(DEFAULT_R+'?action=load&i='+encodeURIComponent(i))
     .then(function(r){ return r.json(); })
     .then(function(j){
       clearTimeout(to);
-      if(j&&j.ok&&j.p)render(j.p);
+      var pj=(j&&j.ok&&j.p)?dec2(j.p):null;
+      if(pj&&pj.v===4)pedirAgenda(i,function(viva){ render(j.p,viva); });
+      else if(j&&j.ok&&j.p)render(j.p);
       else ecra('Link inválido','Este link já não é válido. Por favor responda diretamente à mensagem.');
     })
     .catch(function(){
