@@ -158,7 +158,12 @@ function icsHref(c,isoT){var p=isoT.split('T');var d=p[0].replace(/-/g,'');var t
   return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(txt);}
 function lsGet(k){try{return localStorage.getItem(k);}catch(_){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}
-function render(payloadPronto,viva,abrirDia){
+/* O AVISO DO `ocupada` (15/11/2026, pedido do Bruno depois da prova ao vivo: "se for ao mesmo
+   tempo aparece aviso"). Só o vê quem tinha a página aberta quando outro levou a hora — quem abre
+   depois já não a tem na lista. Sem ele a página pensava e as horas sumiam sem explicação. Sai
+   no render a seguir ao `ocupada` (`aviso`), e o próximo render tira-o. */
+var AVISO_OCUPADA='Essa hora acabou de ser marcada. Escolha outra, por favor.';
+function render(payloadPronto,viva,abrirDia,aviso){
   var card=document.getElementById('card');
   // payloadPronto = JSON vindo do relé (link CURTO, ?i=<id>). Sem ele, lê-se o ?q= de sempre.
   var data=payloadPronto?dec2(payloadPronto):dec(new URLSearchParams(location.search).get('q'));
@@ -268,6 +273,7 @@ function render(payloadPronto,viva,abrirDia){
   var titulo=MES[start.getMonth()]+(start.getMonth()!==lastc.getMonth()?(' – '+MES[lastc.getMonth()]):'');
   var h='<div class="panes">';
   h+='<h1>Olá! 👋 Escolha o dia e hora</h1>';
+  if(aviso)h+='<p class="warn aviso-ocupada">'+AVISO_OCUPADA+'</p>';   // ver o `ocupada`
   h+='<div class="pane-cal">';
   h+='<div class="cal-h">'+titulo+'</div>';
   h+='<div class="dow">'+DOW.map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="grid">';
@@ -377,9 +383,9 @@ function render(payloadPronto,viva,abrirDia){
     });
   }
   var _tentativas=0;
-  /* `ocupada` (só links v:4): outro cliente levou a hora entre o abrir e o clique. Sem mensagem
-     (desenho §2.6: "o segundo vê a lista atualizada, sem aviso") -- volta a pedir-se a agenda e
-     redesenha-se no MESMO ecrã, com o mesmo dia aberto. O relé não gastou o id: o próximo pedido
+  /* `ocupada` (só links v:4): outro cliente levou a hora entre o abrir e o clique. Volta a
+     pedir-se a agenda e redesenha-se no MESMO ecrã, com o mesmo dia aberto, e uma linha de aviso
+     por cima (`avisoOcupada`; até 15/11 era sem aviso, desenho §2.6). O relé não gastou o id: o próximo pedido
      leva o mesmo (o SID sai do `id` do payload). Se a 2.ª leitura falhar, tira-se só essa hora da
      lista que estava no ecrã. */
   function ocupada(isoT){
@@ -389,7 +395,7 @@ function render(payloadPronto,viva,abrirDia){
         nova={b:data.b,d:data.d.map(function(pr){var dt=new Date(b0);dt.setDate(dt.getDate()+pr[0]);
           if(isoOf(dt)!==dia)return pr;
           return [pr[0],pr[1].filter(function(v){return m2h(v<24?v*60:v)!==hora;})];})};}
-      render(payloadPronto,nova,dia);
+      render(payloadPronto,nova,dia,true);
     });
   }
   function lerResposta(r){
