@@ -173,7 +173,7 @@ function render(payloadPronto,viva,abrirDia,aviso){
      estava aberto quando o relé disse `ocupada` (volta a abrir-se, sem mensagem nenhuma).
      DADO = o payload tal como veio: é dele que sai o `id` e o recurso quando a 2.ª leitura falha. */
   var DADO=data;
-  if(data&&data.v===4&&viva){data={};for(var kk in DADO){if(Object.prototype.hasOwnProperty.call(DADO,kk))data[kk]=DADO[kk];}data.b=viva.b;data.d=viva.d;}
+  if(data&&data.v===4&&viva){data={};for(var kk in DADO){if(Object.prototype.hasOwnProperty.call(DADO,kk))data[kk]=DADO[kk];}data.b=viva.b;data.d=janelaHp(viva.d,DADO.hp);}
   // byDate = {iso:{starts,exA,exP}} (listas de 'HH:MM').
   // Formato do dia: [offset,[horas]] (2 elementos, links v:2 de 2026-07-27+) · [offset,[normal],
   // [exA],[exP]] (4 elementos, links 2026-07-23..26, sugestões de hora por chips) · [offset,
@@ -523,6 +523,19 @@ function agendaBoa(j){
     if(Object.prototype.toString.call(pr)!=='[object Array]'||pr.length!==2||typeof pr[0]!=='number'||Object.prototype.toString.call(pr[1])!=='[object Array]')return false;
     for(var m=0;m<pr[1].length;m++)if(typeof pr[1][m]!=='number')return false;}
   return true;
+}
+/* A HORA PREFERIDA DO CENTRO (18/11/2026). Um `v:4` de um centro com hora preferida traz `hp` =
+   [início, fim) em minutos: da lista viva da zona ficam só as horas m com início <= m < fim, e o dia
+   sem nenhuma sai. O relé novo já a manda cortada; cortar aqui também é o que vale enquanto o relé
+   no ar for o antigo. Sem `hp`, ou ilegível, a lista fica como veio (links já enviados). */
+function janelaHp(d,hp){
+  if(Object.prototype.toString.call(hp)!=='[object Array]'||hp.length!==2)return d;
+  var a=hp[0],f=hp[1];
+  if(typeof a!=='number'||typeof f!=='number'||a%1!==0||f%1!==0||a<0||f>1440||a>=f)return d;
+  var o=[];
+  for(var n=0;n<d.length;n++){var hs=[];for(var m=0;m<d[n][1].length;m++){var v=d[n][1][m];if(v>=a&&v<f)hs.push(v);}
+    if(hs.length)o.push([d[n][0],hs]);}
+  return o;
 }
 function pedirAgenda(id,cb){
   var feito=false, tm=null;
