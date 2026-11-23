@@ -163,6 +163,23 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}
    depois já não a tem na lista. Sem ele a página pensava e as horas sumiam sem explicação. Sai
    no render a seguir ao `ocupada` (`aviso`), e o próximo render tira-o. */
 var AVISO_OCUPADA='Essa hora acabou de ser marcada. Escolha outra, por favor.';
+/* O QUE NÃO SE PODE PEDIR (23/11/2026, decisão do Bruno: "horas impossíveis não se podem escolher
+   nem propor"). Num `v:4` o relé manda, com a lista viva, `f` = os dias fechados e `x` = {dia:
+   [[a,b],...]} as horas de início impossíveis (a < H < b, em minutos): a hora já está ocupada, ou
+   não há tempo de viagem desde/para outra visita, ou o dia já é de uma zona que não dá para juntar.
+   O seletor livre (outro dia, ou outra hora no dia) NÃO os oferece; e se o relé recusar na mesma
+   (`impossivel`: a agenda mudou entre o abrir e o clique) a página volta a pedir a lista e diz isto.
+   Sem `x`/`f` (relé antigo, links v:2/v:3) fica tudo como antes: o pedido vai ao Bruno. */
+var AVISO_IMPOSSIVEL='Esse dia ou hora já não está disponível. Escolha outro, por favor.';
+var AVISO_HORA_IMP='Essa hora não está disponível nesse dia. Escolha outra, por favor.';
+var IMP=null;   // {f:[iso], x:{iso:[[a,b]]}} do relé, ou null
+function horaImp(iso,t){
+  if(!IMP||!iso||!/^\d\d:\d\d$/.test(String(t||'')))return false;
+  if(IMP.f.indexOf(iso)>=0)return true;
+  var m=(+t.slice(0,2))*60+(+t.slice(3,5)), js=IMP.x[iso]||[];
+  for(var i=0;i<js.length;i++)if(js[i][0]<m&&m<js[i][1])return true;
+  return false;
+}
 function render(payloadPronto,viva,abrirDia,aviso){
   var card=document.getElementById('card');
   // payloadPronto = JSON vindo do relé (link CURTO, ?i=<id>). Sem ele, lê-se o ?q= de sempre.
@@ -173,6 +190,7 @@ function render(payloadPronto,viva,abrirDia,aviso){
      estava aberto quando o relé disse `ocupada` (volta a abrir-se, sem mensagem nenhuma).
      DADO = o payload tal como veio: é dele que sai o `id` e o recurso quando a 2.ª leitura falha. */
   var DADO=data;
+  IMP=(data&&data.v===4&&viva&&viva.imp)?viva.imp:null;
   if(data&&data.v===4&&viva){data={};for(var kk in DADO){if(Object.prototype.hasOwnProperty.call(DADO,kk))data[kk]=DADO[kk];}data.b=viva.b;data.d=janelaHp(viva.d,DADO.hp);}
   // byDate = {iso:{starts,exA,exP}} (listas de 'HH:MM').
   // Formato do dia: [offset,[horas]] (2 elementos, links v:2 de 2026-07-27+) · [offset,[normal],
@@ -273,7 +291,7 @@ function render(payloadPronto,viva,abrirDia,aviso){
   var titulo=MES[start.getMonth()]+(start.getMonth()!==lastc.getMonth()?(' – '+MES[lastc.getMonth()]):'');
   var h='<div class="panes">';
   h+='<h1>Olá! 👋 Escolha o dia e hora</h1>';
-  if(aviso)h+='<p class="warn aviso-ocupada">'+AVISO_OCUPADA+'</p>';   // ver o `ocupada`
+  if(aviso)h+='<p class="warn aviso-ocupada">'+(typeof aviso==='string'?aviso:AVISO_OCUPADA)+'</p>';   // ver o `ocupada` (e o `impossivel`, 23/11)
   h+='<div class="pane-cal">';
   h+='<div class="cal-h">'+titulo+'</div>';
   h+='<div class="dow">'+DOW.map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="grid">';
@@ -301,17 +319,21 @@ function render(payloadPronto,viva,abrirDia,aviso){
   // ---- seletores livres (v:2) ----
   // Horas 08–19 × minutos 00/15/30/45. A 1.ª opção é vazia de propósito: sem escolha explícita não
   // aparece botão de envio (o pedido é pendente, não se manda por engano).
-  function selHoras(cls,val){var o='<option value="">--</option>';
-    for(var H=8;H<=19;H++){var v=(H<10?'0':'')+H;o+='<option value="'+v+'"'+(val===v?' selected':'')+'>'+v+'h</option>';}
+  // `dia` (23/11): com o IMP do relé, a hora sem nenhum minuto possível e o minuto impossível ficam desativados
+  function selHoras(cls,val,dia){var o='<option value="">--</option>';
+    for(var H=8;H<=19;H++){var v=(H<10?'0':'')+H;
+      var todas=!!dia&&['00','15','30','45'].every(function(mm){return horaImp(dia,v+':'+mm);});
+      o+='<option value="'+v+'"'+(val===v?' selected':'')+(todas?' disabled':'')+'>'+v+'h</option>';}
     return '<select class="'+cls+'">'+o+'</select>';}
-  function selMinutos(cls,val){var o='';
-    ['00','15','30','45'].forEach(function(v){o+='<option value="'+v+'"'+(val===v?' selected':'')+'>'+v+'</option>';});
+  function selMinutos(cls,val,dia,hh){var o='';
+    ['00','15','30','45'].forEach(function(v){var imp=!!dia&&!!hh&&horaImp(dia,hh+':'+v);
+      o+='<option value="'+v+'"'+(val===v?' selected':'')+(imp?' disabled':'')+'>'+v+'</option>';});
     return '<select class="'+cls+'">'+o+'</select>';}
   var NOTA_PEND='Qualquer hora fora da lista precisa de confirmação da nossa parte';
   // Dias úteis das próximas 8 semanas a partir de AMANHÃ (56 dias < a janela de 60 do relé)
   function diasUteis(){var o=[],d=new Date();d.setHours(12,0,0,0);
     for(var i=1;i<=56;i++){var t=new Date(d);t.setDate(t.getDate()+i);var w=t.getDay();
-      if(w===0||w===6)continue;o.push({iso:isoOf(t),lbl:WD[w].slice(0,3)+' '+('0'+t.getDate()).slice(-2)+'/'+('0'+(t.getMonth()+1)).slice(-2)});}
+      if(w===0||w===6)continue;if(IMP&&IMP.f.indexOf(isoOf(t))>=0)continue;o.push({iso:isoOf(t),lbl:WD[w].slice(0,3)+' '+('0'+t.getDate()).slice(-2)+'/'+('0'+(t.getMonth()+1)).slice(-2)});}
     return o;}
   // Painel "Nenhum destes dias dá jeito?": UM pedido único dia + hora, sempre pendente.
   function pickFreeDay(){
@@ -322,9 +344,11 @@ function render(payloadPronto,viva,abrirDia,aviso){
       hh+='<div class="freelbl">Que dia lhe dá jeito?</div>';
       hh+='<select class="freeday"><option value="">Escolha o dia</option>'
         +dias.map(function(d){return '<option value="'+d.iso+'"'+(fdD===d.iso?' selected':'')+'>'+d.lbl+'</option>';}).join('')+'</select>';
-      hh+='<div class="freelbl">A que horas?</div><div class="freerow">'+selHoras('freeh',fdH)+selMinutos('freem',fdM)+'</div>';
+      hh+='<div class="freelbl">A que horas?</div><div class="freerow">'+selHoras('freeh',fdH,fdD)+selMinutos('freem',fdM,fdD,fdH)+'</div>';
       hh+='<div class="pend-note">'+NOTA_PEND+'</div>';
-      if(fdErr){
+      if(fdD&&fdH&&horaImp(fdD,fdH+':'+fdM)){
+        hh+='<div class="senderr">'+AVISO_HORA_IMP+'</div>';
+      }else if(fdErr){
         hh+='<div class="senderr">Não foi possível enviar o pedido. Verifique a ligação e tente de novo — ou responda diretamente à mensagem que recebeu.</div>'
           +'<button class="confbtn pend" type="button" data-t="'+fdH+':'+fdM+'" data-ap="1">Tentar novamente</button>';
       }else if(fdD&&fdH){
@@ -374,6 +398,7 @@ function render(payloadPronto,viva,abrirDia,aviso){
       /* `used` depois de uma tentativa ANTERIOR desta mesma página (a rede caiu a meio e o
          pedido chegou): é o nosso pedido, não um link gasto por outra pessoa. */
       if(j&&j.ok===false&&j.error==='ocupada'&&data.v===4){ocupada(isoT);return;}
+      if(j&&j.ok===false&&j.error==='impossivel'&&data.v===4){ocupada(isoT,AVISO_IMPOSSIVEL);return;}
       if(j&&j.ok===false&&!(j.error==='used'&&_tentativas>1)){recusado(j.error);return;}
       if(data.id)lsSet(LSK,(ap?'ap|':'')+isoT);
       done(isoT,false,!!ap);
@@ -388,14 +413,14 @@ function render(payloadPronto,viva,abrirDia,aviso){
      por cima (`avisoOcupada`; até 15/11 era sem aviso, desenho §2.6). O relé não gastou o id: o próximo pedido
      leva o mesmo (o SID sai do `id` do payload). Se a 2.ª leitura falhar, tira-se só essa hora da
      lista que estava no ecrã. */
-  function ocupada(isoT){
+  function ocupada(isoT,txt){
     var dia=isoT.slice(0,10), hora=isoT.slice(11,16);
     pedirAgenda(String(DADO.id||''),function(nova){
       if(!nova){var b0=parseD(data.b);
         nova={b:data.b,d:data.d.map(function(pr){var dt=new Date(b0);dt.setDate(dt.getDate()+pr[0]);
           if(isoOf(dt)!==dia)return pr;
           return [pr[0],pr[1].filter(function(v){return m2h(v<24?v*60:v)!==hora;})];})};}
-      render(payloadPronto,nova,dia,true);
+      render(payloadPronto,nova,dia,txt||true);
     });
   }
   function lerResposta(r){
@@ -438,13 +463,15 @@ function render(payloadPronto,viva,abrirDia,aviso){
         // v:2: o "Prefere outra hora?" abre o seletor livre (não há chips extra); a lista de horas
         // do dia continua visível por cima e a seleção sobrevive a abrir/usar o seletor
         if(!freeOpen)hh+='<button class="morebtn" type="button">Prefere outra hora?</button>';
-        else hh+='<div class="freelbl">Outra hora neste dia:</div><div class="freerow">'+selHoras('freeh',freeH)+selMinutos('freem',freeM)+'</div>'
+        else hh+='<div class="freelbl">Outra hora neste dia:</div><div class="freerow">'+selHoras('freeh',freeH,iso)+selMinutos('freem',freeM,iso,freeH)+'</div>'
                 +'<div class="pend-note">'+NOTA_PEND+'</div>';
       }else{
         if(!expand&&(day.exA.length||day.exP.length))hh+='<button class="morebtn" type="button">Prefere outra hora?</button>';
         if(expand&&day.exP.length)hh+='<div class="pend-note">Horas assinaladas: sujeitas a confirmação da nossa parte</div>';
       }
-      if(errState){
+      if(selT&&selAp&&horaImp(iso,selT)){
+        hh+='<div class="senderr">'+AVISO_HORA_IMP+'</div>';
+      }else if(errState){
         hh+='<div class="senderr">Não foi possível enviar o pedido. Verifique a ligação e tente de novo — ou responda diretamente à mensagem que recebeu.</div>'
           +'<button class="confbtn'+(selAp?' pend':'')+'" type="button" data-t="'+selT+'"'+(selAp?' data-ap="1"':'')+'>Tentar novamente</button>';
       }else if(selT){
@@ -524,6 +551,17 @@ function agendaBoa(j){
     for(var m=0;m<pr[1].length;m++)if(typeof pr[1][m]!=='number')return false;}
   return true;
 }
+/* `f` = ['yyyy-mm-dd'], `x` = {dia:[[a,b],...]} com números (23/11/2026). Outra coisa = como se não viesse. */
+function impBoa(f,x){
+  var re=/^\d{4}-\d\d-\d\d$/, ARR='[object Array]';
+  if(Object.prototype.toString.call(f)!==ARR)return false;
+  for(var i=0;i<f.length;i++)if(typeof f[i]!=='string'||!re.test(f[i]))return false;
+  if(!x||typeof x!=='object'||Object.prototype.toString.call(x)===ARR)return false;
+  for(var k in x){if(!Object.prototype.hasOwnProperty.call(x,k))continue;
+    if(!re.test(k)||Object.prototype.toString.call(x[k])!==ARR)return false;
+    for(var n=0;n<x[k].length;n++){var p=x[k][n];if(Object.prototype.toString.call(p)!==ARR||p.length!==2||typeof p[0]!=='number'||typeof p[1]!=='number')return false;}}
+  return true;
+}
 /* A HORA PREFERIDA DO CENTRO (18/11/2026). Um `v:4` de um centro com hora preferida traz `hp` =
    [início, fim) em minutos: da lista viva da zona ficam só as horas m com início <= m < fim, e o dia
    sem nenhuma sai. O relé novo já a manda cortada; cortar aqui também é o que vale enquanto o relé
@@ -544,7 +582,7 @@ function pedirAgenda(id,cb){
   try{
     fetch(DEFAULT_R+'?action=agenda&i='+encodeURIComponent(id))
       .then(function(r){ return r.json(); })
-      .then(function(j){ fim(agendaBoa(j)?{b:j.b,d:j.d}:null); },function(){ fim(null); });
+      .then(function(j){ if(!agendaBoa(j)){fim(null);return;} var v={b:j.b,d:j.d}; if(impBoa(j.f,j.x))v.imp={f:j.f,x:j.x}; fim(v); },function(){ fim(null); });
   }catch(e){ fim(null); }
 }
 function arranque(){
