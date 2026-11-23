@@ -116,7 +116,18 @@
      email abriu nem se a mensagem saiu, e por isso nunca diz que foi enviada: mostra o texto na
      caixa (o mesmo que vai no email) e diz o que falta. Sem programa de email no aparelho nao
      abre nada, e sem isto o cliente ficava a olhar para uma pagina igual. */
+  /* O RELE TAMBEM FICA A SABER (23/11/2026, decisao do Bruno): no link CURTO a pagina manda a
+     encomenda ao rele (`action=enc_fin`) e o PC avisa o Bruno, mesmo que o email nunca chegue.
+     So no link curto -- e o unico com id no rele (`window.__ENC`, posto pelo `sugFichArranque`);
+     o link longo e o ficheiro anexado ficam so com o email. Vai ANTES do `mailto:` e no mesmo
+     gesto, com `keepalive` (o programa de email abre por cima), sem esperar e sem ler a resposta:
+     nada do que o rele diga muda o que o cliente ve, e o email abre sempre. */
+  function avisaRele(t){var e=window.__ENC;if(!e||!e.id||!e.rele||typeof fetch!=='function')return;
+    try{var nl=0,nu=0;D.linhas.forEach(function(l,i){var s=tl(i);if(s>0){nl++;nu+=s;}});
+      var pr=fetch(e.rele,{method:'POST',keepalive:true,body:JSON.stringify({action:'enc_fin',id:e.id,nome:D.nome,nif:D.nif,n:nl,u:nu,t:t.slice(0,12000)})});
+      if(pr&&typeof pr.catch==='function')pr.catch(function(){});}catch(x){}}
   function finalizar(){if(!estado().ok)return;var s='Encomenda '+D.nome+' (NIF '+D.nif+')',t=texto();
+    avisaRele(t);
     location.href='mailto:'+D.para+'?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(t);
     var x=doc.getElementById('txt');x.value=t;x.style.display='block';
     doc.getElementById('msg').textContent='Abrimos o seu email com a encomenda: falta carregar em Enviar. Se o email não abriu, carregue em Copiar e cole o texto abaixo num email para '+D.para+'.';}
@@ -220,6 +231,6 @@ var SUG_FICH_RELE="https://script.google.com/macros/s/AKfycbzedS0F01jmcMy-mLf4de
   if(!i){abre(location.hash.slice(1));return;}
   document.getElementById('nome').textContent='Um momento…';document.getElementById('sub').textContent='A carregar a encomenda.';
   fetch(SUG_FICH_RELE+'?action=load&i='+encodeURIComponent(i)).then(function(r){return r.json();})
-    .then(function(j){if(j&&j.ok&&j.p)abre(String(j.p));else erro();})
+    .then(function(j){if(j&&j.ok&&j.p){window.__ENC={id:i,rele:SUG_FICH_RELE};abre(String(j.p));}else erro();})
     .catch(function(){erro();document.getElementById('nome').textContent='Sem ligação';document.getElementById('sub').textContent='Não consegui carregar a encomenda. Verifique a ligação e volte a abrir o link.';});
 })();</script></body></html>
