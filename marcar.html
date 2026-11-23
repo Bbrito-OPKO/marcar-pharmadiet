@@ -267,12 +267,14 @@ function render(payloadPronto,viva,abrirDia,aviso){
   var LSK='pharma_marcado_'+String(data.id||'');
   SID=String(data.id||(''+Date.now()));   // UMA vez por render: o retry reenvia o MESMO id
   var _sending=false;                     // guard de duplo clique (o botão também fica disabled)
-  function done(isoT,reaberto,pend){
+  function done(isoT,reaberto,pend,cego){
     // pend = hora fora da grelha, sujeita a aprovação do Bruno: texto próprio e SEM botão de
     // calendário (a marcação ainda não existe)
+    // cego = o relé respondeu duas vezes sem se conseguir ler (23/11): não se sabe se marcou.
+    // Fica "enviado" (não se inventa falha), mas a frase diz o que fazer e não há calendário.
     var f=fmt(isoT);
-    var html='<div class="sent">✓ '+(reaberto?'Marcação já enviada':'Pedido enviado')+' — '+f.wd+', '+f.dm+' às '+f.hr+'. '+(pend?'Vou confirmar a disponibilidade e dou-lhe resposta em breve.':'Confirmo consigo de seguida!')+'</div>';
-    if(!pend)html+='<a class="btn cal" download="visita-pharmadiet.ics" href="'+icsHref(data.c,isoT)+'">📅 Adicionar ao meu calendário</a>';
+    var html='<div class="sent">✓ '+(reaberto?'Marcação já enviada':'Pedido enviado')+' — '+f.wd+', '+f.dm+' às '+f.hr+'. '+(cego?'Se não receber a minha confirmação em breve, por favor responda à mensagem que recebeu.':(pend?'Vou confirmar a disponibilidade e dou-lhe resposta em breve.':'Confirmo consigo de seguida!'))+'</div>';
+    if(!pend&&!cego)html+='<a class="btn cal" download="visita-pharmadiet.ics" href="'+icsHref(data.c,isoT)+'">📅 Adicionar ao meu calendário</a>';
     card.innerHTML=html;
   }
   // link já usado neste dispositivo → estado final direto, sem calendário (uso único; o relé
@@ -366,7 +368,8 @@ function render(payloadPronto,viva,abrirDia,aviso){
     draw2();
     timesEl.scrollIntoView({behavior:'smooth',block:'nearest'});
   }
-  // Envio fiável: só se considera enviado quando o fetch RESOLVE (resposta opaca do no-cors).
+  // Envio fiável: só se considera enviado quando o fetch RESOLVE e a resposta não é uma recusa
+  // (desde 01/10 a resposta lê-se; o `no-cors` saiu).
   // O try/catch síncrono anterior dava "Pedido enviado" com a rede em baixo — a promise rejeitava
   // depois, em silêncio, e o pedido nunca chegava ao relé. `onErr` devolve o controlo a quem
   // desenhou o painel (dia oferecido ou seletor livre), para o "Tentar novamente" aparecer lá.
@@ -390,21 +393,34 @@ function render(payloadPronto,viva,abrirDia,aviso){
        A recusa só se mostra quando se LÊ uma recusa: uma resposta que não se consegue ler
        (opaca, sem JSON) fica como antes -- "enviado" --, porque inventar uma falha que pode não
        ter havido punha o cliente a tentar outra vez num link que já marcou. */
-    _tentativas++;
-    var p; try{p=fetch(R,{method:'POST',body:JSON.stringify(body)});}catch(e){p=Promise.reject(e);}
-    var tm; var lim=new Promise(function(_,rej){tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
-    Promise.race([p.then(lerResposta),lim]).then(function(j){
-      clearTimeout(tm); _sending=false;
-      /* `used` depois de uma tentativa ANTERIOR desta mesma página (a rede caiu a meio e o
-         pedido chegou): é o nosso pedido, não um link gasto por outra pessoa. */
+    function pedir(){
+      _tentativas++;
+      var p; try{p=fetch(R,{method:'POST',body:JSON.stringify(body)});}catch(e){p=Promise.reject(e);}
+      var tm; var lim=new Promise(function(_,rej){tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
+      return Promise.race([p.then(lerResposta),lim]).then(function(j){clearTimeout(tm);return j;},function(e){clearTimeout(tm);throw e;});
+    }
+    /* RESPOSTA ILEGÍVEL: PERGUNTA-SE MAIS UMA VEZ (23/11/2026, decisão do Bruno). O relé só
+       aceita cada `id` uma vez, e responde `used` ANTES de gastar o teto do dia: se o 1.º pedido
+       chegou, o 2.º volta `used` (é o nosso, ver abaixo); se não chegou, marca agora. Tira-se a
+       dúvida sem inventar falha nenhuma. Só com as DUAS ilegíveis (`cego`) fica "enviado" como
+       antes -- mas com frase prudente, sem calendário, e SEM gastar o link neste aparelho: ao
+       reabrir, o cliente pode tentar outra vez. */
+    pedir().then(function(j){
+      if(j!==null)return {j:j,cego:false};
+      return pedir().then(function(j2){return {j:j2,cego:j2===null};});
+    }).then(function(r){
+      var j=r.j; _sending=false;
       if(j&&j.ok===false&&j.error==='ocupada'&&data.v===4){ocupada(isoT);return;}
       if(j&&j.ok===false&&j.error==='impossivel'&&data.v===4){ocupada(isoT,AVISO_IMPOSSIVEL);return;}
+      /* `used` depois de uma tentativa ANTERIOR desta mesma página (a rede caiu a meio, ou a
+         resposta veio ilegível, e o pedido chegou): é o nosso pedido, não um link gasto por
+         outra pessoa. */
       if(j&&j.ok===false&&!(j.error==='used'&&_tentativas>1)){recusado(j.error);return;}
-      if(data.id)lsSet(LSK,(ap?'ap|':'')+isoT);
-      done(isoT,false,!!ap);
+      if(data.id&&!r.cego)lsSet(LSK,(ap?'ap|':'')+isoT);
+      done(isoT,false,!!ap,r.cego);
       card.scrollIntoView({behavior:'smooth',block:'start'});
     },function(){
-      clearTimeout(tm); _sending=false; if(onErr)onErr();
+      _sending=false; if(onErr)onErr();
     });
   }
   var _tentativas=0;
@@ -433,7 +449,10 @@ function render(payloadPronto,viva,abrirDia,aviso){
     if(err==='used'){t='Este link já foi usado';m='Já foi pedida uma visita com este link. Se quiser mudar o dia ou a hora, responda diretamente à mensagem que recebeu.';}
     else if(err==='slot fora da janela'||err==='slot invalido'){t='Esse dia já não pode ser marcado';m='Esse dia já passou ou está fora do prazo deste link. Por favor responda diretamente à mensagem que recebeu e combinamos outro dia.';}
     else if(err==='limite diario'){t='Não foi possível registar o pedido';m='Não consegui registar o pedido agora. Por favor responda diretamente à mensagem que recebeu e trato da marcação consigo.';}
-    else{t='Este link já não é válido';m='Não foi possível marcar com este link. Por favor responda diretamente à mensagem que recebeu.';}
+    else if(err==='auth'||err==='k'){t='Este link já não é válido';m='Não foi possível marcar com este link. Por favor responda diretamente à mensagem que recebeu.';}
+    /* Erro que a página não conhece (o relé ocupado, uma exceção passageira): o link está bom,
+       e dizer que "já não é válido" era mentira (23/11/2026). Só `auth` e `k` são o link. */
+    else{t='Não foi possível registar o pedido';m='Não consegui registar o pedido agora. Por favor responda diretamente à mensagem que recebeu e trato da marcação consigo.';}
     ecra(t,m);
     card.scrollIntoView({behavior:'smooth',block:'start'});
   }
