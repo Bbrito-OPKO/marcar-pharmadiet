@@ -112,9 +112,14 @@
       if(L.length)B.push((N>1?'Entrega '+(k+1)+' ('+D.ent[k].d+'):\n':'')+L.join('\n'));}
     var o=(doc.getElementById('obs').value||'').trim();
     return 'Encomenda '+D.nome+' (NIF '+D.nif+')'+(DUAS?'\nModo: '+(MO==='total'?'Base':'Base + Novos'):'')+'\n\n'+B.join('\n\n')+(o?'\n\nObservações: '+o:'');}
-  function finalizar(){if(!estado().ok)return;var s='Encomenda '+D.nome+' (NIF '+D.nif+')';
-    location.href='mailto:'+D.para+'?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(texto());
-    doc.getElementById('msg').textContent='Se o email não abriu, carregue em Copiar e cole num email para '+D.para+'.';}
+  /* A ENCOMENDA FICA A VISTA depois do Finalizar (23/11/2026). A pagina nao sabe se o programa de
+     email abriu nem se a mensagem saiu, e por isso nunca diz que foi enviada: mostra o texto na
+     caixa (o mesmo que vai no email) e diz o que falta. Sem programa de email no aparelho nao
+     abre nada, e sem isto o cliente ficava a olhar para uma pagina igual. */
+  function finalizar(){if(!estado().ok)return;var s='Encomenda '+D.nome+' (NIF '+D.nif+')',t=texto();
+    location.href='mailto:'+D.para+'?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(t);
+    var x=doc.getElementById('txt');x.value=t;x.style.display='block';
+    doc.getElementById('msg').textContent='Abrimos o seu email com a encomenda: falta carregar em Enviar. Se o email não abriu, carregue em Copiar e cole o texto abaixo num email para '+D.para+'.';}
   /* Sem area de transferencia (ficheiro aberto de um anexo, browser antigo), o texto aparece
      numa caixa ja selecionada, para copiar a mao. */
   function mostra(t){var x=doc.getElementById('txt');x.value=t;x.style.display='block';try{x.focus();x.select();}catch(e){}
