@@ -80,7 +80,8 @@
   .morebtn{display:block;width:100%;max-width:170px;margin:8px auto 0;padding:9px 6px;font-size:13px}
   @media (hover:hover){.altbtn:hover,.morebtn:hover{background:#EAF2FB}}
   .sent{background:var(--green);color:#fff;border:2px solid var(--green-d);border-radius:14px;padding:14px 16px;font-size:15px;font-weight:800;line-height:1.45;margin:6px 0 12px;text-align:center}
-  .warn{font-size:14px;color:var(--ink);margin:6px 0 12px;line-height:1.5}
+  .sent.duv{background:#FFF7E0;color:var(--ink);border-color:#E0B040}
+.warn{font-size:14px;color:var(--ink);margin:6px 0 12px;line-height:1.5}
   .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;text-decoration:none;color:#fff}
   .btn.cal{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
   .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
@@ -271,9 +272,9 @@ function render(payloadPronto,viva,abrirDia,aviso){
     // pend = hora fora da grelha, sujeita a aprovação do Bruno: texto próprio e SEM botão de
     // calendário (a marcação ainda não existe)
     // cego = o relé respondeu duas vezes sem se conseguir ler: não se sabe se marcou.
-    // Fica "enviado" (não se inventa falha), mas a frase diz o que fazer e não há calendário.
+    // Não diz "enviado" nem "falhou": diz que não tem a certeza e o que fazer; sem calendário.
     var f=fmt(isoT);
-    var html='<div class="sent">✓ '+(reaberto?'Marcação já enviada':'Pedido enviado')+' — '+f.wd+', '+f.dm+' às '+f.hr+'. '+(cego?'Se não receber a minha confirmação em breve, por favor responda à mensagem que recebeu.':(pend?'Vou confirmar a disponibilidade e dou-lhe resposta em breve.':'Confirmo consigo de seguida!'))+'</div>';
+    var html='<div class="sent'+(cego?' duv':'')+'">'+(cego?'Não tenho a certeza de que o pedido chegou':'✓ '+(reaberto?'Marcação já enviada':'Pedido enviado'))+' — '+f.wd+', '+f.dm+' às '+f.hr+'. '+(cego?'Se não receber a minha confirmação em breve, por favor responda à mensagem que recebeu.':(pend?'Vou confirmar a disponibilidade e dou-lhe resposta em breve.':'Confirmo consigo de seguida!'))+'</div>';
     if(!pend&&!cego)html+='<a class="btn cal" download="visita-pharmadiet.ics" href="'+icsHref(data.c,isoT)+'">📅 Adicionar ao meu calendário</a>';
     card.innerHTML=html;
   }
