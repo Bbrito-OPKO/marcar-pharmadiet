@@ -158,7 +158,9 @@
   function mailtoDe(t){return 'mailto:'+D.para+'?subject='+encodeURIComponent('Encomenda '+D.nome+' (NIF '+D.nif+')')+'&body='+encodeURIComponent(t);}
   function ligEmail(rotulo,t){var a=doc.getElementById('eml');if(!rotulo){a.style.display='none';return;}
     a.textContent=rotulo;a.href=mailtoDe(t);a.style.display='inline-block';}
-  function caixa(t){var x=doc.getElementById('txt');x.value=t;x.style.display='block';}
+  function caixa(t){var x=doc.getElementById('txt');x.value=t;x.style.display='block';
+    /* a caixa cresce ate caber a encomenda inteira (24/11, pedido do Bruno: vinha cortada) */
+    x.rows=String(t).split('\n').length+1;x.style.height='auto';if(x.scrollHeight>0)x.style.height=(x.scrollHeight+6)+'px';}
   function pedeRele(e,t){var nl=0,nu=0;D.linhas.forEach(function(l,i){var s=tl(i);if(s>0){nl++;nu+=s;}});
     var p;try{p=fetch(e.rele,{method:'POST',keepalive:true,body:JSON.stringify({action:'enc_fin',id:e.id,nome:D.nome,nif:D.nif,n:nl,u:nu,t:t.slice(0,12000)})});}catch(x){p=Promise.reject(x);}
     var tm=null,lim=new Promise(function(_,rej){if(typeof setTimeout==='function')tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
@@ -182,7 +184,7 @@
     ENVIANDO=true;m.textContent='A enviar…';ligEmail('');doc.getElementById('cfs').disabled=true;pinta();
     pedeRele(e,t).then(function(x){ENVIANDO=false;doc.getElementById('cfs').disabled=false;
       if(x.r==='ok')tranca(t,'Encomenda enviada ✓ Obrigado.');
-      else if(x.r==='fin')tranca(x.t,'Esta encomenda já tinha sido enviada e já não pode ser alterada. Para a mudar, fale connosco.');
+      else if(x.r==='fin')tranca(x.t,'Esta encomenda já tinha sido enviada e já não pode ser alterada. Para a mudar, fale comigo.');
       else{ve('cf',false);ve('ed',true);caixa(t);m.textContent='Não consegui enviar daqui. Carregue em "Enviar por email", ou em Copiar e cole o texto abaixo num email para '+D.para+'.';ligEmail('Enviar por email',t);pinta();}
     });}
   /* Sem area de transferencia (ficheiro aberto de um anexo, browser antigo), o texto aparece
@@ -195,7 +197,7 @@
   window.mexe=mexe;window.poe=poe;window.escolhe=escolhe;window.modo=modo;window.repor=repor;window.finalizar=finalizar;window.confirmar=confirmar;window.voltar=voltar;window.data=data;window.copiar=copiar;window.__DT=function(){return DT;};window.__estado=estado;window.__texto=texto;window.__Q=function(){return Q;};window.__FX=function(){return FX;};
   pinta();
   /* link que ja foi finalizado (o `load` do rele disse `fin`): abre trancado, com o que foi enviado */
-  if(window.__ENC&&typeof window.__ENC.fin==='string'&&window.__ENC.fin)tranca(window.__ENC.fin,'Esta encomenda já foi enviada. Para a alterar, fale connosco.');
+  if(window.__ENC&&typeof window.__ENC.fin==='string'&&window.__ENC.fin)tranca(window.__ENC.fin,'Esta encomenda já foi enviada. Para a alterar, fale comigo.');
 };var SUG_FECHO_MARGEM_EUR=100,SUG_FECHO_MARGEM_PCT=0.06,SUG_FECHO_MARGEM_MIN_PCT=0.03,SUG_FECHO_MARGEM_NOVOS_UN=1.5;
 function sugFechoMargem(falta){
   const f=Math.max(0,falta||0);
