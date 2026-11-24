@@ -385,17 +385,14 @@ function render(payloadPronto,viva,abrirDia,aviso){
     if(data.s)body.s=data.s;
     if(data.w)body.w=data.w;
     if(ap)body.ap=1;
-    /* A RESPOSTA DO RELÉ É LIDA (01/10/2026, G3 do go-live). Era `mode:'no-cors'`: a página
-       nunca sabia o que o relé respondeu, e um link já usado, um dia fora da janela ou um link
-       recusado diziam todos "Pedido enviado" -- o cliente ficava com uma marcação que não
-       existia. O Apps Script responde com CORS legível (medido a 01/10: o 302 e o 200 do
+    /* A RESPOSTA DO RELÉ É LIDA. O Apps Script responde com CORS legível (o 302 e o 200 do
        googleusercontent levam `Access-Control-Allow-Origin: *`) e o corpo vai como texto simples
        (sem cabeçalhos = text/plain, sem preflight), portanto basta ler.
-       A recusa só se mostra quando se LÊ uma recusa: uma resposta que não se consegue ler
-       (opaca, sem JSON) fica como antes -- "enviado" --, porque inventar uma falha que pode não
-       ter havido punha o cliente a tentar outra vez num link que já marcou. */
+       A recusa só se mostra quando se LÊ uma recusa. Uma resposta que não se consegue ler
+       (opaca, sem JSON) nunca vira falha: pergunta-se outra vez e, se continuar ilegível, a
+       página diz que não tem a certeza (ver o `cego` do `done`). */
     function pedir(){
-      _tentativas++;
+      _tentativas++; _horas.push(isoT);
       var p; try{p=fetch(R,{method:'POST',body:JSON.stringify(body)});}catch(e){p=Promise.reject(e);}
       var tm; var lim=new Promise(function(_,rej){tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
       return Promise.race([p.then(lerResposta),lim]).then(function(j){clearTimeout(tm);return j;},function(e){clearTimeout(tm);throw e;});
@@ -414,8 +411,10 @@ function render(payloadPronto,viva,abrirDia,aviso){
       if(j&&j.ok===false&&j.error==='impossivel'&&data.v===4){ocupada(isoT,AVISO_IMPOSSIVEL);return;}
       /* `used` depois de uma tentativa ANTERIOR desta mesma página (a rede caiu a meio, ou a
          resposta veio ilegível, e o pedido chegou): é o nosso pedido, não um link gasto por
-         outra pessoa. */
-      if(j&&j.ok===false&&!(j.error==='used'&&_tentativas>1)){recusado(j.error);return;}
+         outra pessoa. Só conta como nosso se TODAS as tentativas foram para esta mesma hora:
+         se o cliente tentou outra hora antes, não se sabe qual entrou, e diz-se "link já usado"
+         (responda à mensagem) em vez de confirmar uma hora que pode não ser a marcada. */
+      if(j&&j.ok===false&&!(j.error==='used'&&_tentativas>1&&_horas.every(function(h){return h===isoT;}))){recusado(j.error);return;}
       if(data.id&&!r.cego)lsSet(LSK,(ap?'ap|':'')+isoT);
       done(isoT,false,!!ap,r.cego);
       card.scrollIntoView({behavior:'smooth',block:'start'});
@@ -423,7 +422,7 @@ function render(payloadPronto,viva,abrirDia,aviso){
       _sending=false; if(onErr)onErr();
     });
   }
-  var _tentativas=0;
+  var _tentativas=0, _horas=[];   // as horas de cada pedido feito ao relé nesta página
   /* `ocupada` (só links v:4): outro cliente levou a hora entre o abrir e o clique. Volta a
      pedir-se a agenda e redesenha-se no MESMO ecrã, com o mesmo dia aberto, e uma linha de aviso
      por cima (`avisoOcupada`; até 15/11 era sem aviso, desenho §2.6). O relé não gastou o id: o próximo pedido
@@ -604,7 +603,16 @@ function pedirAgenda(id,cb){
       .then(function(j){ if(!agendaBoa(j)){fim(null);return;} var v={b:j.b,d:j.d}; if(impBoa(j.f,j.x))v.imp={f:j.f,x:j.x}; fim(v); },function(){ fim(null); });
   }catch(e){ fim(null); }
 }
+/* SEM LIGAÇÃO ao abrir o link: o link está bom, por isso oferece-se "Tentar de novo" (corre o
+   arranque outra vez). `_arr` conta os arranques: a resposta de um arranque anterior que chegue
+   depois de um novo ter começado é ignorada. */
+var _arr=0;
+function semLigacao(){
+  ecra('Sem ligação','Não consegui carregar as datas. Verifique a ligação e tente de novo, ou responda diretamente à mensagem.');
+  document.getElementById('card').innerHTML+='<button class="btn" style="background:var(--green-d)" onclick="arranque()">Tentar de novo</button>';
+}
 function arranque(){
+  var eu=++_arr;
   var i=''; try{ i=new URLSearchParams(location.search).get('i')||''; }catch(e){}
   if(!i){                                          // link ?q= de sempre
     var q=null; try{ q=dec(new URLSearchParams(location.search).get('q')); }catch(e){}
@@ -613,11 +621,12 @@ function arranque(){
     render(); return;
   }
   ecra('Um momento…','A carregar as datas disponíveis.');
-  var to=setTimeout(function(){ ecra('Sem ligação','Não consegui carregar as datas. Verifique a ligação e volte a abrir o link, ou responda diretamente à mensagem.'); },15000);
+  var to=setTimeout(function(){ if(eu===_arr)semLigacao(); },15000);
   fetch(DEFAULT_R+'?action=load&i='+encodeURIComponent(i))
     .then(function(r){ return r.json(); })
     .then(function(j){
       clearTimeout(to);
+      if(eu!==_arr)return;
       var pj=(j&&j.ok&&j.p)?dec2(j.p):null;
       if(pj&&pj.v===4)pedirAgenda(i,function(viva){ render(j.p,viva); });
       else if(j&&j.ok&&j.p)render(j.p);
@@ -625,7 +634,7 @@ function arranque(){
     })
     .catch(function(){
       clearTimeout(to);
-      ecra('Sem ligação','Não consegui carregar as datas. Verifique a ligação e volte a abrir o link, ou responda diretamente à mensagem.');
+      if(eu===_arr)semLigacao();
     });
 }
 arranque();
