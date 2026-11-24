@@ -1,5 +1,11 @@
-<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Encomenda</title><style>*{box-sizing:border-box}body{margin:0;background:#F6F8FB;font-family:Arial,Helvetica,sans-serif;color:#39414D}.w{max-width:720px;margin:0 auto;padding:16px}h1{font-size:20px;color:#103F72;margin:4px 0 2px}.sub{font-size:13px;color:#6C7889;margin-bottom:14px}.falta{position:sticky;top:0;z-index:2;background:#fff;border:1px solid #DEE5EE;border-radius:12px;padding:12px 14px;margin-bottom:12px}.big{font-size:22px;font-weight:800;color:#D24A3D;text-align:center}.bar{height:8px;background:#EEF2F7;border-radius:6px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:#D24A3D}.falta.mau{border-color:#D24A3D;background:#FBE9E7}.falta.ok{border-color:#6E9A1E;background:#F3F9E7}.ok .big{color:#557617}.ok .bar i{background:#6E9A1E}td.p.nao{color:#B23A2F;box-shadow:inset 4px 0 0 #D24A3D}td.p.sim{color:#557617;box-shadow:inset 4px 0 0 #6E9A1E}.modos{display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}.modos:empty{display:none}.modos .ch{flex:none}.mx{font-size:13px;font-weight:600;color:#103F72;line-height:1.25}.nv{font-size:12px;color:#6C7889;margin-top:4px;text-align:center}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #DEE5EE;border-radius:12px;overflow:hidden}td,th{padding:9px 8px;border-bottom:1px solid #EEF2F7;font-size:14px}td.q{text-align:center;white-space:nowrap}th{background:#175FAA;color:#fff;font-size:12px;font-weight:700;text-align:center;white-space:nowrap}th.p,td.p{text-align:left;white-space:normal;min-width:110px}th.p{text-align:center}th .dt{font-size:11px;font-weight:400;opacity:.85}th[id]{cursor:pointer}th.on{background:#103F72}td.on{background:#EEF4FB}span.v{display:inline-block;min-width:34px;padding:6px 0;cursor:pointer}.tw{overflow-x:auto;border-radius:12px}button.s{width:30px;height:32px;border-radius:10px;border:1px solid #DEE5EE;background:#fff;font-size:18px;color:#134F8E;cursor:pointer}input.n{width:40px;height:32px;padding:0;text-align:center;font-size:16px;border:1px solid #DEE5EE;border-radius:10px;margin:0 2px;-moz-appearance:textfield;appearance:textfield}input.n::-webkit-outer-spin-button,input.n::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.tr{font-size:11px;color:#98A4B5}textarea{width:100%;min-height:60px;margin:12px 0;padding:8px;border:1px solid #DEE5EE;border-radius:10px;font:inherit;font-size:16px}.acts{display:flex;gap:10px;flex-wrap:wrap}.acts button{height:40px;padding:0 18px;border-radius:20px;font-weight:700;font-size:14px;cursor:pointer}#fin{border:1.5px solid #6E9A1E;background:#F3F9E7;color:#557617}#fin:disabled{opacity:.45;cursor:not-allowed}.sec{border:1.5px solid #DEE5EE;background:#fff;color:#39414D}#msg{font-size:12px;color:#557617;margin-top:8px;min-height:15px}a.lk{margin:8px 8px 0;padding:9px 16px;border-radius:20px;border:1.5px solid #134F8E;color:#134F8E;font-size:13px;font-weight:700;text-decoration:none}.ex{background:#EEF4FB;border:1px solid #C9DBF0;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:14.5px;line-height:1.45;color:#103F72}.ex div+div{margin-top:4px}input.n.fx{border:2px solid #175FAA;background:#EEF4FB;font-weight:700;color:#103F72}@media (max-width:600px){.w{padding:12px 0}.w>h1,.w>.sub,.ex,.modos,.falta,textarea,.acts,#msg{margin-left:8px;margin-right:8px}.w>textarea{width:calc(100% - 16px)}.tw,.tw table{border-radius:0}.tw table{border-left:0;border-right:0}td,th{padding:7px 2px;font-size:13px}th.p,td.p{min-width:0;padding-left:8px}button.s{width:24px;height:30px}input.n{width:32px;height:30px;margin:0 1px}span.v{min-width:22px}th{white-space:normal;line-height:1.2}th.p,td.p{width:100%}}.ch{height:34px;padding:0 10px;border-radius:17px;border:1.5px solid #DEE5EE;background:#fff;color:#39414D;font-weight:700;font-size:12px;cursor:pointer}.ch.on{background:#134F8E;border-color:#134F8E;color:#fff}</style></head><body><div class="w"><h1 id="nome"></h1><div class="sub" id="sub"></div><div class="ex" id="ex"></div><div id="modos" class="modos"></div><div id="fb" class="falta"><div id="big" class="big"></div><div class="bar"><i id="bi"></i></div><div id="nv" class="nv"></div></div><div class="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div><textarea id="obs" placeholder="Observações (opcional)"></textarea><div class="acts"><button id="fin" onclick="finalizar()">Finalizar e enviar por email</button><button class="sec" onclick="copiar()">Copiar</button><button class="sec" onclick="repor()">Repor</button></div><div id="msg"></div><a id="eml" class="lk" style="display:none"></a><textarea id="txt" readonly style="display:none;min-height:160px"></textarea></div><script>var __PAGINA__=function sugFichPagina(){
+<!DOCTYPE html><html lang="pt"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Encomenda</title><style>*{box-sizing:border-box}body{margin:0;background:#F6F8FB;font-family:Arial,Helvetica,sans-serif;color:#39414D}.w{max-width:720px;margin:0 auto;padding:16px}h1{font-size:20px;color:#103F72;margin:4px 0 2px}.sub{font-size:13px;color:#6C7889;margin-bottom:14px}.falta{position:sticky;top:0;z-index:2;background:#fff;border:1px solid #DEE5EE;border-radius:12px;padding:12px 14px;margin-bottom:12px}.big{font-size:22px;font-weight:800;color:#D24A3D;text-align:center}.bar{height:8px;background:#EEF2F7;border-radius:6px;overflow:hidden;margin:8px 0 4px}.bar i{display:block;height:100%;background:#D24A3D}.falta.mau{border-color:#D24A3D;background:#FBE9E7}.falta.ok{border-color:#6E9A1E;background:#F3F9E7}.ok .big{color:#557617}.ok .bar i{background:#6E9A1E}td.p.nao{color:#B23A2F;box-shadow:inset 4px 0 0 #D24A3D}td.p.sim{color:#557617;box-shadow:inset 4px 0 0 #6E9A1E}.modos{display:flex;flex-wrap:nowrap;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}.modos:empty{display:none}.modos .ch{flex:none}.mx{font-size:13px;font-weight:600;color:#103F72;line-height:1.25}.nv{font-size:12px;color:#6C7889;margin-top:4px;text-align:center}table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #DEE5EE;border-radius:12px;overflow:hidden}td,th{padding:9px 8px;border-bottom:1px solid #EEF2F7;font-size:14px}td.q{text-align:center;white-space:nowrap}th{background:#175FAA;color:#fff;font-size:12px;font-weight:700;text-align:center;white-space:nowrap}th.p,td.p{text-align:left;white-space:normal;min-width:110px}th.p{text-align:center}th .dt{font-size:11px;font-weight:400;opacity:.85}th[id]{cursor:pointer}th.on{background:#103F72}td.on{background:#EEF4FB}span.v{display:inline-block;min-width:34px;padding:6px 0;cursor:pointer}.tw{overflow-x:auto;border-radius:12px}button.s{width:30px;height:32px;border-radius:10px;border:1px solid #DEE5EE;background:#fff;font-size:18px;color:#134F8E;cursor:pointer}input.n{width:40px;height:32px;padding:0;text-align:center;font-size:16px;border:1px solid #DEE5EE;border-radius:10px;margin:0 2px;-moz-appearance:textfield;appearance:textfield}input.n::-webkit-outer-spin-button,input.n::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.tr{font-size:11px;color:#98A4B5}textarea{width:100%;min-height:60px;margin:12px 0;padding:8px;border:1px solid #DEE5EE;border-radius:10px;font:inherit;font-size:16px}.acts{display:flex;gap:10px;flex-wrap:wrap}.acts button{height:40px;padding:0 18px;border-radius:20px;font-weight:700;font-size:14px;cursor:pointer}#fin,#cfs{border:1.5px solid #6E9A1E;background:#F3F9E7;color:#557617}#fin:disabled,#cfs:disabled{opacity:.45;cursor:not-allowed}th .dt.ed{position:relative;display:inline-block;margin-top:3px;padding:3px 8px;border:1px solid #fff;border-radius:8px;opacity:1;font-weight:700;white-space:nowrap}th .dt.ed input.dd{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;border:0;padding:0;margin:0;font-size:16px;cursor:pointer}.cf{background:#fff;border:1.5px solid #6E9A1E;border-radius:12px;padding:14px;margin-bottom:12px}.cft{font-size:17px;font-weight:800;color:#103F72;margin-bottom:8px}.cfx{white-space:pre-wrap;font-size:14.5px;line-height:1.45;margin-bottom:10px}.cfn{font-size:13px;color:#B23A2F;font-weight:700;margin-bottom:12px}#cp2{height:36px;padding:0 16px;border-radius:20px;font-weight:700;font-size:13px;cursor:pointer;margin:8px 8px 0}.sec{border:1.5px solid #DEE5EE;background:#fff;color:#39414D}#msg{font-size:12px;color:#557617;margin-top:8px;min-height:15px}a.lk{margin:8px 8px 0;padding:9px 16px;border-radius:20px;border:1.5px solid #134F8E;color:#134F8E;font-size:13px;font-weight:700;text-decoration:none}.ex{background:#EEF4FB;border:1px solid #C9DBF0;border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:14.5px;line-height:1.45;color:#103F72}.ex div+div{margin-top:4px}input.n.fx{border:2px solid #175FAA;background:#EEF4FB;font-weight:700;color:#103F72}@media (max-width:600px){.w{padding:12px 0}.w>h1,.w>.sub,.ex,.modos,.falta,textarea,.acts,#msg,.cf{margin-left:8px;margin-right:8px}.w textarea{width:calc(100% - 16px)}.tw,.tw table{border-radius:0}.tw table{border-left:0;border-right:0}td,th{padding:7px 2px;font-size:13px}th.p,td.p{min-width:0;padding-left:8px}button.s{width:24px;height:30px}input.n{width:32px;height:30px;margin:0 1px}span.v{min-width:22px}th{white-space:normal;line-height:1.2}th.p,td.p{width:100%}}.ch{height:34px;padding:0 10px;border-radius:17px;border:1.5px solid #DEE5EE;background:#fff;color:#39414D;font-weight:700;font-size:12px;cursor:pointer}.ch.on{background:#134F8E;border-color:#134F8E;color:#fff}</style></head><body><div class="w"><h1 id="nome"></h1><div class="sub" id="sub"></div><div id="ed"><div class="ex" id="ex"></div><div id="modos" class="modos"></div><div id="fb" class="falta"><div id="big" class="big"></div><div class="bar"><i id="bi"></i></div><div id="nv" class="nv"></div></div><div class="tw"><table><thead id="th"></thead><tbody id="tb"></tbody></table></div><textarea id="obs" placeholder="Observações (opcional)"></textarea><div class="acts"><button id="fin" onclick="finalizar()">Finalizar e enviar por email</button><button class="sec" onclick="copiar()">Copiar</button><button class="sec" onclick="repor()">Repor</button></div></div><div id="cf" class="cf" style="display:none"><div class="cft">Confirme a encomenda e as datas</div><div id="cfx" class="cfx"></div><div class="cfn">Depois de confirmar já não dá para alterar.</div><div class="acts"><button id="cfs" onclick="confirmar()">Confirmar e enviar</button><button class="sec" onclick="voltar()">Voltar atrás</button></div></div><div id="msg"></div><a id="eml" class="lk" style="display:none"></a><button id="cp2" class="sec" style="display:none" onclick="copiar()">Copiar</button><textarea id="txt" readonly style="display:none;min-height:160px"></textarea></div><script>var __PAGINA__=function sugFichPagina(){
   var N=D.ent.length,K=0,doc=document;
+  /* AS DATAS SAO DO CLIENTE DA 2.a ENTREGA EM DIANTE (24/11/2026, ponto 1-D): `DT` = as datas no
+     ecra (partem das do link). So num link `dm:1`; as regras sao as do `sugEncDataMotivo`, que e o
+     MESMO codigo com que o PC volta a decidir. */
+  var DT=D.ent.map(function(e){return {d:e.d,i:e.i};}),DM=D.dm===1&&N>1&&typeof sugEncDataMotivo==='function';
+  var MESES=['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  function hojeL(){var x=new Date(),p=function(v){return (v<10?'0':'')+v;};return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate());}
   /* O MODO E DO CLIENTE (Bruno, 16/10/2026): "Base + Novos" (o total e cada produto novo com o
      minimo dele) ou "Base" (um valor so, os novos la dentro). So aparece a escolha quando as duas
      dao contas diferentes; um link de antes (sem `alvoT`) fica no Base + Novos, como era. */
@@ -18,7 +24,7 @@
   /* O TEXTO CURTO (Bruno, 16/10/2026: "tenta resumir mais o texto inicial"). A linha "Toque no
      titulo de uma encomenda para a mudar" saiu no mesmo dia, a pedido dele. */
   [AUTO?'Mude as unidades com − e +: as outras acertam-se sozinhas (as que mudou ficam a azul).':'Mude as unidades com − e +.',
-   'Verde: pronto a enviar.'].forEach(function(t){if(t)ex.appendChild(mk('div',null,t));});
+   'Verde: pronto a enviar.',DM?'Toque na data de uma encomenda para a mudar (a 1.ª é na hora).':''].forEach(function(t){if(t)ex.appendChild(mk('div',null,t));});
   if(DUAS){var mo=doc.getElementById('modos');
     [['base','Base + Novos'],['total','Base']].forEach(function(o){var b=mk('button','ch',o[1]);b.id='m_'+o[0];b.onclick=function(){modo(o[0]);};mo.appendChild(b);});
     mo.appendChild(mk('div','mx',null)).id='mx';}
@@ -29,7 +35,14 @@
   /* Os cartoes "1.a/2.a/3.a encomenda" sairam (Bruno, 16/10/2026): escolhe-se pelo titulo da coluna. */
   var th=doc.getElementById('th'),hr=mk('tr');hr.appendChild(mk('th','p','Produto'));
   D.ent.forEach(function(e,k){var h=mk('th',null,N>1?(k+1)+'ª encomenda':'Unidades');h.id='h'+k;
-    if(N>1){h.appendChild(mk('div','dt',e.d));h.onclick=function(){escolhe(k);};}hr.appendChild(h);});
+    var dt=mk('div','dt',e.d);dt.id='dt'+k;h.appendChild(dt);if(N>1)h.onclick=function(){escolhe(k);};
+    /* a data toca-se: um campo de data transparente por cima do dd/mm abre o calendario do
+       proprio telemovel, ja limitado ao mes dessa entrega e de hoje em diante */
+    if(DM&&k>=1){var J=sugEncJanela(D.ent[0].i,k),hj=hojeL(),mn=J&&J.de>hj?J.de:hj;
+      if(J&&mn<=J.ate){dt.className='dt ed';dt.textContent='';var ds=mk('span',null,e.d+' ✎');ds.id='ds'+k;dt.appendChild(ds);
+        var di=mk('input','dd');di.type='date';di.id='di'+k;di.min=mn;di.max=J.ate;di.value=e.i;
+        di.onchange=function(){data(k,this.value);};di.onclick=function(){try{this.showPicker();}catch(x){}};dt.appendChild(di);}}
+    hr.appendChild(h);});
   th.appendChild(hr);
   var tb=doc.getElementById('tb');
   D.linhas.forEach(function(l,i){var tr=mk('tr'),a=mk('td','p',l.d);a.id='p'+i;
@@ -105,13 +118,19 @@
   }
   function escolhe(k){K=k;pinta();}
   /* Trocar de modo faz o que a app faz: volta a proposta desse modo e solta as linhas mexidas. */
-  function modo(m){if(!DUAS)return;reabre();MO=m==='total'?'total':'base';
+  function modo(m){if(!DUAS||ENVIANDO||ENVIADA)return;MO=m==='total'?'total':'base';
     if(D.linhas.every(function(l){return !!l.o;}))Q=copia();else reajusta(K);pinta();}
-  function mexe(i,d){if(D.linhas[i].t)return;reabre();Q[i][K]=Math.max(0,(Q[i][K]|0)+d);FX[i][K]=true;reajusta(K,i);pinta();}
-  function poe(i,v){if(D.linhas[i].t)return;reabre();v=parseInt(v,10);Q[i][K]=isNaN(v)||v<0?0:v;FX[i][K]=true;reajusta(K,i);pinta();}
-  function repor(){reabre();Q=copia();pinta();}
+  function mexe(i,d){if(D.linhas[i].t||ENVIANDO||ENVIADA)return;Q[i][K]=Math.max(0,(Q[i][K]|0)+d);FX[i][K]=true;reajusta(K,i);pinta();}
+  function poe(i,v){if(D.linhas[i].t||ENVIANDO||ENVIADA)return;v=parseInt(v,10);Q[i][K]=isNaN(v)||v<0?0:v;FX[i][K]=true;reajusta(K,i);pinta();}
+  function repor(){if(ENVIANDO||ENVIADA)return;Q=copia();DT=D.ent.map(function(e){return {d:e.d,i:e.i};});
+    for(var k=1;k<N;k++){var di=doc.getElementById('di'+k);if(di){di.value=DT[k].i;doc.getElementById('ds'+k).textContent=DT[k].d+' ✎';}}pinta();}
+  function data(k,v){if(!DM||!(k>=1&&k<N))return;var di=doc.getElementById('di'+k),m=doc.getElementById('msg');if(!di)return;
+    if(ENVIANDO||ENVIADA||!v){di.value=DT[k].i;return;}
+    if(sugEncDataMotivo(D,k,v,hojeL())){di.value=DT[k].i;var w=new Date(v+'T00:00:00Z').getUTCDay(),J=sugEncJanela(D.ent[0].i,k);
+      m.textContent=(w===0||w===6)?'Escolha um dia de semana (segunda a sexta).':'Essa data não dá: a '+(k+1)+'ª encomenda tem de ser em '+MESES[parseInt(J.de.slice(5,7),10)-1]+', de hoje em diante.';return;}
+    DT[k]={i:v,d:v.slice(8,10)+'/'+v.slice(5,7)};doc.getElementById('ds'+k).textContent=DT[k].d+' ✎';m.textContent='';}
   function texto(){var B=[];for(var k=0;k<N;k++){var L=[];D.linhas.forEach(function(l,i){if(Q[i][k]>0)L.push((l.c?l.c+' - ':'')+l.d+': '+Q[i][k]+' un');});
-      if(L.length)B.push((N>1?'Entrega '+(k+1)+' ('+D.ent[k].d+'):\n':'')+L.join('\n'));}
+      if(L.length)B.push((N>1?'Entrega '+(k+1)+' ('+DT[k].d+'):\n':'')+L.join('\n'));}
     var o=(doc.getElementById('obs').value||'').trim();
     return 'Encomenda '+D.nome+' (NIF '+D.nif+')'+(DUAS?'\nModo: '+(MO==='total'?'Base':'Base + Novos'):'')+'\n\n'+B.join('\n\n')+(o?'\n\nObservações: '+o:'');}
   /* A ENCOMENDA FICA A VISTA depois do Finalizar (23/11/2026). A pagina nao sabe se o programa de
@@ -128,8 +147,14 @@
      um 2.o pedido, soma uma `vez`, e o Bruno era avisado a dobrar.
      O email do recurso e uma ANCORA que o cliente toca: um `location.href='mailto:'` depois de
      uma espera ja nao esta dentro do gesto dele, e ha telemoveis que o bloqueiam.
-     Mexer nas unidades depois de enviada volta a ligar o botao (`reabre`). */
-  var ENVIANDO=false,ENVIADA=false;
+     FINALIZA-SE UMA VEZ SO (24/11/2026, ponto 1-D, decisao do Bruno: "para nao haver hipotese
+     de finalizar uma segunda vez"). O Finalizar ja nao envia: mostra o RESUMO (as unidades e as
+     datas) com "Confirmar e enviar" e "Voltar atras". Depois de enviada a pagina TRANCA: nada
+     mexe, fica o texto a vista com Copiar e o email. O `reabre` de 23/11 (mexer voltava a ligar o
+     botao) saiu. Quem tranca a serio e o rele: a um 2.o `enc_fin` com outro texto responde
+     `error:'fin'` e devolve o texto que la esta, e ao abrir o link o `load` ja diz `fin` -- a
+     pagina abre trancada, com esse texto. Reenviar o MESMO texto (resposta que se perdeu) da `ok`. */
+  var ENVIANDO=false,ENVIADA=false,TF='';
   function mailtoDe(t){return 'mailto:'+D.para+'?subject='+encodeURIComponent('Encomenda '+D.nome+' (NIF '+D.nif+')')+'&body='+encodeURIComponent(t);}
   function ligEmail(rotulo,t){var a=doc.getElementById('eml');if(!rotulo){a.style.display='none';return;}
     a.textContent=rotulo;a.href=mailtoDe(t);a.style.display='inline-block';}
@@ -138,28 +163,39 @@
     var p;try{p=fetch(e.rele,{method:'POST',keepalive:true,body:JSON.stringify({action:'enc_fin',id:e.id,nome:D.nome,nif:D.nif,n:nl,u:nu,t:t.slice(0,12000)})});}catch(x){p=Promise.reject(x);}
     var tm=null,lim=new Promise(function(_,rej){if(typeof setTimeout==='function')tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
     return Promise.race([Promise.resolve(p).then(function(r){if(!r||typeof r.json!=='function'||r.type==='opaque')return null;return r.json();}),lim])
-      .then(function(j){return !!(j&&typeof j==='object'&&j.ok===true);},function(){return false;})
-      .then(function(ok){if(tm!==null&&typeof clearTimeout==='function')clearTimeout(tm);return ok;});}
-  function reabre(){if(!ENVIADA)return;ENVIADA=false;doc.getElementById('msg').textContent='';ligEmail('');}
-  function finalizar(){if(!estado().ok||ENVIANDO||ENVIADA)return;var t=texto(),e=window.__ENC,m=doc.getElementById('msg');
+      .then(function(j){if(j&&typeof j==='object'){if(j.ok===true)return {r:'ok'};if(j.ok===false&&j.error==='fin'&&typeof j.t==='string'&&j.t)return {r:'fin',t:j.t};}return {r:'nao'};},function(){return {r:'nao'};})
+      .then(function(x){if(tm!==null&&typeof clearTimeout==='function')clearTimeout(tm);return x;});}
+  function ve(id,sim){var x=doc.getElementById(id);if(x)x.style.display=sim?'':'none';}
+  /* TRANCADA: so o texto (o que foi mesmo enviado), o Copiar e o email. */
+  function tranca(t,frase){ENVIADA=true;ENVIANDO=false;TF=t;ve('ed',false);ve('cf',false);caixa(t);
+    doc.getElementById('msg').textContent=frase;ligEmail('Enviar também por email',t);ve('cp2',true);pinta();}
+  function finalizar(){if(!estado().ok||ENVIANDO||ENVIADA)return;
+    doc.getElementById('cfx').textContent=(N===1?'Entrega: '+DT[0].d+'\n\n':'')+texto();
+    doc.getElementById('msg').textContent='';ligEmail('');doc.getElementById('txt').style.display='none';ve('ed',false);ve('cf',true);}
+  function voltar(){if(ENVIANDO||ENVIADA)return;ve('cf',false);ve('ed',true);}
+  function confirmar(){if(!estado().ok||ENVIANDO||ENVIADA)return;var t=texto(),e=window.__ENC,m=doc.getElementById('msg');
     if(!e||!e.id||!e.rele||typeof fetch!=='function'){
-      /* link longo e ficheiro anexado: nao ha id no rele -- o email de sempre, na hora */
-      location.href=mailtoDe(t);caixa(t);
+      /* link longo e ficheiro anexado: nao ha id no rele -- o email de sempre, na hora. A pagina
+         nao sabe se o email saiu, e por isso aqui nao tranca. */
+      ve('cf',false);ve('ed',true);location.href=mailtoDe(t);caixa(t);
       m.textContent='Abrimos o seu email com a encomenda: falta carregar em Enviar. Se o email não abriu, carregue em Copiar e cole o texto abaixo num email para '+D.para+'.';return;}
-    ENVIANDO=true;m.textContent='A enviar…';ligEmail('');pinta();
-    pedeRele(e,t).then(function(ok){ENVIANDO=false;
-      if(ok){ENVIADA=true;doc.getElementById('txt').style.display='none';m.textContent='Encomenda enviada ✓ Obrigado.';ligEmail('Enviar também por email',t);}
-      else{caixa(t);m.textContent='Não consegui enviar daqui. Carregue em "Enviar por email", ou em Copiar e cole o texto abaixo num email para '+D.para+'.';ligEmail('Enviar por email',t);}
-      pinta();});}
+    ENVIANDO=true;m.textContent='A enviar…';ligEmail('');doc.getElementById('cfs').disabled=true;pinta();
+    pedeRele(e,t).then(function(x){ENVIANDO=false;doc.getElementById('cfs').disabled=false;
+      if(x.r==='ok')tranca(t,'Encomenda enviada ✓ Obrigado.');
+      else if(x.r==='fin')tranca(x.t,'Esta encomenda já tinha sido enviada e já não pode ser alterada. Para a mudar, fale connosco.');
+      else{ve('cf',false);ve('ed',true);caixa(t);m.textContent='Não consegui enviar daqui. Carregue em "Enviar por email", ou em Copiar e cole o texto abaixo num email para '+D.para+'.';ligEmail('Enviar por email',t);pinta();}
+    });}
   /* Sem area de transferencia (ficheiro aberto de um anexo, browser antigo), o texto aparece
      numa caixa ja selecionada, para copiar a mao. */
   function mostra(t){var x=doc.getElementById('txt');x.value=t;x.style.display='block';try{x.focus();x.select();}catch(e){}
     doc.getElementById('msg').textContent='Copie o texto da caixa e cole num email para '+D.para+'.';}
-  function copiar(){var t=texto(),m=doc.getElementById('msg');
+  function copiar(){var t=ENVIADA?TF:texto(),m=doc.getElementById('msg');
     if(navigator.clipboard)navigator.clipboard.writeText(t).then(function(){m.textContent='Copiado. Cole num email para '+D.para+'.';},function(){mostra(t);});
     else mostra(t);}
-  window.mexe=mexe;window.poe=poe;window.escolhe=escolhe;window.modo=modo;window.repor=repor;window.finalizar=finalizar;window.copiar=copiar;window.__estado=estado;window.__texto=texto;window.__Q=function(){return Q;};window.__FX=function(){return FX;};
+  window.mexe=mexe;window.poe=poe;window.escolhe=escolhe;window.modo=modo;window.repor=repor;window.finalizar=finalizar;window.confirmar=confirmar;window.voltar=voltar;window.data=data;window.copiar=copiar;window.__DT=function(){return DT;};window.__estado=estado;window.__texto=texto;window.__Q=function(){return Q;};window.__FX=function(){return FX;};
   pinta();
+  /* link que ja foi finalizado (o `load` do rele disse `fin`): abre trancado, com o que foi enviado */
+  if(window.__ENC&&typeof window.__ENC.fin==='string'&&window.__ENC.fin)tranca(window.__ENC.fin,'Esta encomenda já foi enviada. Para a alterar, fale connosco.');
 };var SUG_FECHO_MARGEM_EUR=100,SUG_FECHO_MARGEM_PCT=0.06,SUG_FECHO_MARGEM_MIN_PCT=0.03,SUG_FECHO_MARGEM_NOVOS_UN=1.5;
 function sugFechoMargem(falta){
   const f=Math.max(0,falta||0);
@@ -235,6 +271,25 @@ function sugFechoAcerta(lista,alvo,jaFeito){
     esc.r.sug--;v-=esc.net;
   }
 }
+function sugEncJanela(i0,k){
+  var m=/^(\d{4})-(\d\d)-(\d\d)$/.exec(String(i0||''));if(!m||!(k>=1))return null;
+  var a=parseInt(m[1],10),ms=parseInt(m[2],10)-1+k;a+=Math.floor(ms/12);ms=ms%12;
+  var ult=new Date(Date.UTC(a,ms+1,0)).getUTCDate(),p=function(x){return (x<10?'0':'')+x;};
+  return {de:a+'-'+p(ms+1)+'-01',ate:a+'-'+p(ms+1)+'-'+p(ult)};
+}
+function sugEncDataMotivo(D,k,iso,hoje){
+  iso=String(iso||'');
+  if(!/^\d{4}-\d\d-\d\d$/.test(iso))return 'uma data que não percebo';
+  if(D.ent[k]&&iso===D.ent[k].i)return '';
+  if(D.dm!==1||!(k>=1))return 'a data desta entrega não pode mudar';
+  var d=new Date(iso+'T00:00:00Z');
+  if(isNaN(d.getTime())||d.toISOString().slice(0,10)!==iso)return 'uma data que não existe';
+  var s=d.getUTCDay();if(s===0||s===6)return 'uma entrega ao fim de semana';
+  if(hoje&&iso<hoje)return 'uma data que já passou';
+  var J=sugEncJanela(D.ent[0].i,k);
+  if(!J||iso<J.de||iso>J.ate)return 'uma entrega fora do mês dela (é uma por mês)';
+  return '';
+}
 var SUG_FICH_RELE="https://script.google.com/macros/s/AKfycbzedS0F01jmcMy-mLf4deECfyUr5feSak9e1M5NHlccfUU4dC1dpwNxmg722aRKjBej7g/exec";
 (function sugFichArranque(){
   /* abrir OUTRO link com a pagina ja aberta so muda o `#` -- sem recarregar ficava a encomenda velha */
@@ -251,6 +306,6 @@ var SUG_FICH_RELE="https://script.google.com/macros/s/AKfycbzedS0F01jmcMy-mLf4de
   if(!i){abre(location.hash.slice(1));return;}
   document.getElementById('nome').textContent='Um momento…';document.getElementById('sub').textContent='A carregar a encomenda.';
   fetch(SUG_FICH_RELE+'?action=load&i='+encodeURIComponent(i)).then(function(r){return r.json();})
-    .then(function(j){if(j&&j.ok&&j.p){window.__ENC={id:i,rele:SUG_FICH_RELE};abre(String(j.p));}else erro();})
+    .then(function(j){if(j&&j.ok&&j.p){window.__ENC={id:i,rele:SUG_FICH_RELE,fin:j.fin&&typeof j.t==='string'?j.t:''};abre(String(j.p));}else erro();})
     .catch(function(){erro();document.getElementById('nome').textContent='Sem ligação';document.getElementById('sub').textContent='Não consegui carregar a encomenda. Verifique a ligação e volte a abrir o link.';});
 })();</script></body></html>
