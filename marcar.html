@@ -163,13 +163,13 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}
    depois já não a tem na lista. Sem ele a página pensava e as horas sumiam sem explicação. Sai
    no render a seguir ao `ocupada` (`aviso`), e o próximo render tira-o. */
 var AVISO_OCUPADA='Essa hora acabou de ser marcada. Escolha outra, por favor.';
-/* O QUE NÃO SE PODE PEDIR (23/11/2026, decisão do Bruno: "horas impossíveis não se podem escolher
-   nem propor"). Num `v:4` o relé manda, com a lista viva, `f` = os dias fechados e `x` = {dia:
+/* O QUE NÃO SE PODE PEDIR: horas impossíveis não se podem escolher nem propor.
+   Num `v:4` o relé manda, com a lista viva, `f` = os dias fechados e `x` = {dia:
    [[a,b],...]} as horas de início impossíveis (a < H < b, em minutos): a hora já está ocupada, ou
    não há tempo de viagem desde/para outra visita, ou o dia já é de uma zona que não dá para juntar.
    O seletor livre (outro dia, ou outra hora no dia) NÃO os oferece; e se o relé recusar na mesma
    (`impossivel`: a agenda mudou entre o abrir e o clique) a página volta a pedir a lista e diz isto.
-   Sem `x`/`f` (relé antigo, links v:2/v:3) fica tudo como antes: o pedido vai ao Bruno. */
+   Sem `x`/`f` (links v:2/v:3) nada se trava aqui: o pedido vai ao Bruno. */
 var AVISO_IMPOSSIVEL='Esse dia ou hora já não está disponível. Escolha outro, por favor.';
 var AVISO_HORA_IMP='Essa hora não está disponível nesse dia. Escolha outra, por favor.';
 var IMP=null;   // {f:[iso], x:{iso:[[a,b]]}} do relé, ou null
@@ -270,7 +270,7 @@ function render(payloadPronto,viva,abrirDia,aviso){
   function done(isoT,reaberto,pend,cego){
     // pend = hora fora da grelha, sujeita a aprovação do Bruno: texto próprio e SEM botão de
     // calendário (a marcação ainda não existe)
-    // cego = o relé respondeu duas vezes sem se conseguir ler (23/11): não se sabe se marcou.
+    // cego = o relé respondeu duas vezes sem se conseguir ler: não se sabe se marcou.
     // Fica "enviado" (não se inventa falha), mas a frase diz o que fazer e não há calendário.
     var f=fmt(isoT);
     var html='<div class="sent">✓ '+(reaberto?'Marcação já enviada':'Pedido enviado')+' — '+f.wd+', '+f.dm+' às '+f.hr+'. '+(cego?'Se não receber a minha confirmação em breve, por favor responda à mensagem que recebeu.':(pend?'Vou confirmar a disponibilidade e dou-lhe resposta em breve.':'Confirmo consigo de seguida!'))+'</div>';
@@ -293,7 +293,7 @@ function render(payloadPronto,viva,abrirDia,aviso){
   var titulo=MES[start.getMonth()]+(start.getMonth()!==lastc.getMonth()?(' – '+MES[lastc.getMonth()]):'');
   var h='<div class="panes">';
   h+='<h1>Olá! 👋 Escolha o dia e hora</h1>';
-  if(aviso)h+='<p class="warn aviso-ocupada">'+(typeof aviso==='string'?aviso:AVISO_OCUPADA)+'</p>';   // ver o `ocupada` (e o `impossivel`, 23/11)
+  if(aviso)h+='<p class="warn aviso-ocupada">'+(typeof aviso==='string'?aviso:AVISO_OCUPADA)+'</p>';   // ver o `ocupada` e o `impossivel`
   h+='<div class="pane-cal">';
   h+='<div class="cal-h">'+titulo+'</div>';
   h+='<div class="dow">'+DOW.map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="grid">';
@@ -321,7 +321,7 @@ function render(payloadPronto,viva,abrirDia,aviso){
   // ---- seletores livres (v:2) ----
   // Horas 08–19 × minutos 00/15/30/45. A 1.ª opção é vazia de propósito: sem escolha explícita não
   // aparece botão de envio (o pedido é pendente, não se manda por engano).
-  // `dia` (23/11): com o IMP do relé, a hora sem nenhum minuto possível e o minuto impossível ficam desativados
+  // `dia`: com o IMP do relé, a hora sem nenhum minuto possível e o minuto impossível ficam desativados
   function selHoras(cls,val,dia){var o='<option value="">--</option>';
     for(var H=8;H<=19;H++){var v=(H<10?'0':'')+H;
       var todas=!!dia&&['00','15','30','45'].every(function(mm){return horaImp(dia,v+':'+mm);});
@@ -399,12 +399,11 @@ function render(payloadPronto,viva,abrirDia,aviso){
       var tm; var lim=new Promise(function(_,rej){tm=setTimeout(function(){rej(new Error('timeout'));},12000);});
       return Promise.race([p.then(lerResposta),lim]).then(function(j){clearTimeout(tm);return j;},function(e){clearTimeout(tm);throw e;});
     }
-    /* RESPOSTA ILEGÍVEL: PERGUNTA-SE MAIS UMA VEZ (23/11/2026, decisão do Bruno). O relé só
-       aceita cada `id` uma vez, e responde `used` ANTES de gastar o teto do dia: se o 1.º pedido
-       chegou, o 2.º volta `used` (é o nosso, ver abaixo); se não chegou, marca agora. Tira-se a
-       dúvida sem inventar falha nenhuma. Só com as DUAS ilegíveis (`cego`) fica "enviado" como
-       antes -- mas com frase prudente, sem calendário, e SEM gastar o link neste aparelho: ao
-       reabrir, o cliente pode tentar outra vez. */
+    /* RESPOSTA ILEGÍVEL: PERGUNTA-SE MAIS UMA VEZ. O relé só aceita cada `id` uma vez, e
+       responde `used` ANTES de gastar o teto do dia: se o 1.º pedido chegou, o 2.º volta `used`
+       (é o nosso, ver abaixo); se não chegou, marca agora. Só com as DUAS ilegíveis (`cego`)
+       fica "enviado", com frase prudente, sem calendário, e SEM gastar o link neste aparelho:
+       ao reabrir, o cliente pode tentar outra vez. */
     pedir().then(function(j){
       if(j!==null)return {j:j,cego:false};
       return pedir().then(function(j2){return {j:j2,cego:j2===null};});
@@ -451,7 +450,7 @@ function render(payloadPronto,viva,abrirDia,aviso){
     else if(err==='limite diario'){t='Não foi possível registar o pedido';m='Não consegui registar o pedido agora. Por favor responda diretamente à mensagem que recebeu e trato da marcação consigo.';}
     else if(err==='auth'||err==='k'){t='Este link já não é válido';m='Não foi possível marcar com este link. Por favor responda diretamente à mensagem que recebeu.';}
     /* Erro que a página não conhece (o relé ocupado, uma exceção passageira): o link está bom,
-       e dizer que "já não é válido" era mentira (23/11/2026). Só `auth` e `k` são o link. */
+       por isso nunca se diz que "já não é válido". Só `auth` e `k` são o link. */
     else{t='Não foi possível registar o pedido';m='Não consegui registar o pedido agora. Por favor responda diretamente à mensagem que recebeu e trato da marcação consigo.';}
     ecra(t,m);
     card.scrollIntoView({behavior:'smooth',block:'start'});
@@ -570,7 +569,7 @@ function agendaBoa(j){
     for(var m=0;m<pr[1].length;m++)if(typeof pr[1][m]!=='number')return false;}
   return true;
 }
-/* `f` = ['yyyy-mm-dd'], `x` = {dia:[[a,b],...]} com números (23/11/2026). Outra coisa = como se não viesse. */
+/* `f` = ['yyyy-mm-dd'], `x` = {dia:[[a,b],...]} com números. Outra coisa = como se não viesse. */
 function impBoa(f,x){
   var re=/^\d{4}-\d\d-\d\d$/, ARR='[object Array]';
   if(Object.prototype.toString.call(f)!==ARR)return false;
