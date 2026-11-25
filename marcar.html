@@ -125,6 +125,14 @@
     .hint{margin-top:16px;font-size:13px}
     .cal-h{font-size:15px}
   }
+  .janela{position:fixed;top:0;right:0;bottom:0;left:0;z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
+  .janela[hidden]{display:none}
+  .janela-fundo{position:absolute;top:0;right:0;bottom:0;left:0;background:rgba(20,40,70,.45)}
+  .janela-caixa{position:relative;width:100%;max-width:340px;background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 12px 36px rgba(20,40,70,.25);padding:44px 22px 22px;text-align:center}
+  .janela-x{position:absolute;top:4px;right:4px;width:44px;height:44px;border:none;border-radius:12px;background:transparent;font-size:28px;line-height:1;color:var(--muted);cursor:pointer;font-family:inherit}
+  .janela-txt{font-size:18px;font-weight:700;color:var(--ink);line-height:1.45;margin:0 0 20px}
+  .janela-ok{display:block;width:100%;border:none;border-radius:12px;padding:13px 10px;font-size:15px;font-weight:800;color:#fff;background:var(--green);cursor:pointer;font-family:inherit;min-height:44px}
+  @media (hover:hover){.janela-x:hover{background:#EAF2FB}.janela-ok:hover{background:var(--green-d)}}
 </style>
 </head>
 <body>
@@ -133,6 +141,7 @@
   <div class="card" id="card"><p class="err">A carregar…</p></div>
   <div class="foot">Marcação de visita comercial · Pharmadiet</div>
 </div>
+<div id="janela" class="janela" hidden></div>
 <script>
 var DEFAULT_R='https://script.google.com/macros/s/AKfycbzedS0F01jmcMy-mLf4deECfyUr5feSak9e1M5NHlccfUU4dC1dpwNxmg722aRKjBej7g/exec';
 var DUR_MIN=30;   // duração da reunião mostrada ao cliente e usada no "Adicionar ao calendário"
@@ -159,11 +168,33 @@ function icsHref(c,isoT){var p=isoT.split('T');var d=p[0].replace(/-/g,'');var t
   return 'data:text/calendar;charset=utf-8,'+encodeURIComponent(txt);}
 function lsGet(k){try{return localStorage.getItem(k);}catch(_){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}
-/* O AVISO DO `ocupada` (15/11/2026, pedido do Bruno depois da prova ao vivo: "se for ao mesmo
-   tempo aparece aviso"). Só o vê quem tinha a página aberta quando outro levou a hora — quem abre
-   depois já não a tem na lista. Sem ele a página pensava e as horas sumiam sem explicação. Sai
-   no render a seguir ao `ocupada` (`aviso`), e o próximo render tira-o. */
-var AVISO_OCUPADA='Essa hora acabou de ser marcada. Escolha outra, por favor.';
+/* O AVISO DE HORA RECUSADA (`ocupada` e `impossivel`): uma janela no meio do ecrã, por cima de um
+   fundo escurecido, com o texto, um X e o botão "Escolher outra hora". Fecha com o X, com o botão,
+   com um toque no fundo e com a tecla Esc; ao fechar, o foco vai para a lista de horas. Enquanto
+   está aberta, nenhum pedido sai (`enviar`). É um elemento só (`#janela`, no HTML): uma recusa
+   seguida troca-lhe o texto, não abre outra. Sem `#janela` (página antiga num teste), não abre. */
+var AVISO_OCUPADA='Essa hora já não está disponível. Escolha outra, por favor.';
+var RECUSADAS=[];   // 'yyyy-mm-ddTHH:MM' das horas da lista que o relé recusou nesta página
+function janelaAberta(){var j=document.getElementById('janela');return !!(j&&j.hidden===false);}
+function janelaFechar(){
+  var j=document.getElementById('janela'); if(!j||j.hidden!==false)return;
+  j.hidden=true; j.innerHTML='';
+  var t=document.getElementById('times'), c=t&&t.querySelectorAll?t.querySelectorAll('.chip')[0]:null;
+  if(c&&typeof c.focus==='function')c.focus();
+}
+function janelaAbrir(txt){
+  var j=document.getElementById('janela'); if(!j)return;
+  j.innerHTML='<div class="janela-fundo"></div><div class="janela-caixa" role="alertdialog" aria-modal="true" aria-labelledby="janela-txt">'
+    +'<button class="janela-x" type="button" aria-label="Fechar">×</button>'
+    +'<p class="janela-txt" id="janela-txt">'+txt+'</p>'
+    +'<button class="janela-ok" type="button">Escolher outra hora</button></div>';
+  j.hidden=false;
+  j.querySelectorAll('.janela-x')[0].onclick=janelaFechar;
+  j.querySelectorAll('.janela-ok')[0].onclick=janelaFechar;
+  j.querySelectorAll('.janela-fundo')[0].onclick=janelaFechar;
+  var ok=j.querySelectorAll('.janela-ok')[0]; if(typeof ok.focus==='function')ok.focus();
+}
+if(typeof document.addEventListener==='function')document.addEventListener('keydown',function(e){if(e&&(e.key==='Escape'||e.key==='Esc')&&janelaAberta())janelaFechar();});
 /* O QUE NÃO SE PODE PEDIR: horas impossíveis não se podem escolher nem propor.
    Num `v:4` o relé manda, com a lista viva, `f` = os dias fechados e `x` = {dia:
    [[a,b],...]} as horas de início impossíveis (a < H < b, em minutos): a hora já está ocupada, ou
@@ -181,7 +212,7 @@ function horaImp(iso,t){
   for(var i=0;i<js.length;i++)if(js[i][0]<m&&m<js[i][1])return true;
   return false;
 }
-function render(payloadPronto,viva,abrirDia,aviso){
+function render(payloadPronto,viva,abrirDia){
   var card=document.getElementById('card');
   // payloadPronto = JSON vindo do relé (link CURTO, ?i=<id>). Sem ele, lê-se o ?q= de sempre.
   var data=payloadPronto?dec2(payloadPronto):dec(new URLSearchParams(location.search).get('q'));
@@ -294,7 +325,6 @@ function render(payloadPronto,viva,abrirDia,aviso){
   var titulo=MES[start.getMonth()]+(start.getMonth()!==lastc.getMonth()?(' – '+MES[lastc.getMonth()]):'');
   var h='<div class="panes">';
   h+='<h1>Olá! 👋 Escolha o dia e hora</h1>';
-  if(aviso)h+='<p class="warn aviso-ocupada">'+(typeof aviso==='string'?aviso:AVISO_OCUPADA)+'</p>';   // ver o `ocupada` e o `impossivel`
   h+='<div class="pane-cal">';
   h+='<div class="cal-h">'+titulo+'</div>';
   h+='<div class="dow">'+DOW.map(function(d){return '<span>'+d+'</span>';}).join('')+'</div><div class="grid">';
@@ -376,7 +406,7 @@ function render(payloadPronto,viva,abrirDia,aviso){
   // desenhou o painel (dia oferecido ou seletor livre), para o "Tentar novamente" aparecer lá.
   // NÃO se manda campo nenhum a dizer "dia livre": a app recalcula isso sozinha no poll.
   function enviar(isoT,ap,btnEl,onErr){
-    if(_sending)return; _sending=true;
+    if(_sending||janelaAberta())return; _sending=true;
     if(btnEl){btnEl.disabled=true;btnEl.className='confbtn'+(ap?' pend':'')+' busy';btnEl.innerHTML='A enviar';}
     // s = assinatura do link longo (desde 14/09): so vale para este id e este cliente.
     // w = o segredo de escrita, que so os links longos ANTERIORES a 14/09 ainda trazem.
@@ -423,19 +453,28 @@ function render(payloadPronto,viva,abrirDia,aviso){
     });
   }
   var _tentativas=0, _horas=[];   // as horas de cada pedido feito ao relé nesta página
-  /* `ocupada` (só links v:4): outro cliente levou a hora entre o abrir e o clique. Volta a
-     pedir-se a agenda e redesenha-se no MESMO ecrã, com o mesmo dia aberto, e uma linha de aviso
-     por cima (`avisoOcupada`; até 15/11 era sem aviso, desenho §2.6). O relé não gastou o id: o próximo pedido
-     leva o mesmo (o SID sai do `id` do payload). Se a 2.ª leitura falhar, tira-se só essa hora da
-     lista que estava no ecrã. */
+  /* `ocupada` / `impossivel` (só links v:4): a hora já não serve (outro cliente, ou a agenda do
+     Bruno). Volta a pedir-se a agenda e redesenha-se no MESMO ecrã, com o mesmo dia aberto, e abre-se
+     a janela do aviso (`txt`; sem ele, o do `ocupada`). Num pedido a uma hora da lista (`ocupada`)
+     essa hora entra nas `RECUSADAS`, e todas as `RECUSADAS` saem SEMPRE da lista redesenhada, mesmo
+     que a 2.ª leitura as traga outra vez; no pedido livre (`impossivel`) a lista fica como veio. Se a 2.ª leitura falhar, desenha-se a lista que
+     estava no ecrã. O relé não gastou o id: o próximo pedido leva o mesmo (o SID sai do `id`). */
+  function semHora(v,dia,hora){
+    var b0=parseD(v.b), o={};
+    for(var k in v){if(Object.prototype.hasOwnProperty.call(v,k))o[k]=v[k];}
+    o.d=v.d.map(function(pr){var dt=new Date(b0);dt.setDate(dt.getDate()+pr[0]);
+      if(isoOf(dt)!==dia)return pr;
+      return [pr[0],pr[1].filter(function(x){return m2h(x<24?x*60:x)!==hora;})];});
+    return o;
+  }
   function ocupada(isoT,txt){
-    var dia=isoT.slice(0,10), hora=isoT.slice(11,16);
+    var dia=isoT.slice(0,10);
     pedirAgenda(String(DADO.id||''),function(nova){
-      if(!nova){var b0=parseD(data.b);
-        nova={b:data.b,d:data.d.map(function(pr){var dt=new Date(b0);dt.setDate(dt.getDate()+pr[0]);
-          if(isoOf(dt)!==dia)return pr;
-          return [pr[0],pr[1].filter(function(v){return m2h(v<24?v*60:v)!==hora;})];})};}
-      render(payloadPronto,nova,dia,txt||true);
+      if(!nova)nova={b:data.b,d:data.d};
+      if(!txt&&RECUSADAS.indexOf(isoT)<0)RECUSADAS.push(isoT);
+      if(!txt)RECUSADAS.forEach(function(r){nova=semHora(nova,r.slice(0,10),r.slice(11,16));});
+      render(payloadPronto,nova,dia);
+      janelaAbrir(txt||AVISO_OCUPADA);
     });
   }
   function lerResposta(r){
