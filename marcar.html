@@ -82,6 +82,9 @@
   .sent{background:var(--green);color:#fff;border:2px solid var(--green-d);border-radius:14px;padding:14px 16px;font-size:15px;font-weight:800;line-height:1.45;margin:6px 0 12px;text-align:center}
   .sent.duv{background:#FFF7E0;color:var(--ink);border-color:#E0B040}
 .warn{font-size:14px;color:var(--ink);margin:6px 0 12px;line-height:1.5}
+  /* O aviso "sem horas frescas" (link curto v:4): por cima do calendario, com o botao de voltar a pedir. */
+  .avisohf{border:1.5px dashed var(--navy);border-radius:12px;padding:10px 12px;margin:0 0 14px;font-size:13.5px;line-height:1.45;color:var(--ink)}
+  .avisohf .morebtn{max-width:none;margin-top:8px}
   .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:none;border-radius:14px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:10px;text-decoration:none;color:#fff}
   .btn.cal{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
   .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:18px}
@@ -175,6 +178,21 @@ function lsSet(k,v){try{localStorage.setItem(k,v);}catch(_){}}
    seguida troca-lhe o texto, não abre outra. Sem `#janela` (página antiga num teste), não abre. */
 var AVISO_OCUPADA='Essa hora já não está disponível. Escolha outra, por favor.';
 var RECUSADAS=[];   // 'yyyy-mm-ddTHH:MM' das horas da lista que o relé recusou nesta página
+var AVISO_SEM_FRESCAS='As horas não estão atualizadas. Por favor, carregue em «Atualizar horas». Se não atualizar, escolha um dia e hora e eu confirmo a disponibilidade.';
+var _atualizando=false;   // o "Atualizar horas" tem um pedido em curso: um 2.º toque não pede outra vez
+/* HORAS FRESCAS (B1 parte 4): a resposta do relé às horas é boa E (o PC publicou há menos de 15 min,
+   `velha:false`, OU o relé leu o calendário neste pedido, `ics:1`). Só `false` e `1` a sério contam.
+   Sem resposta, `ok:false`, ilegível, ou velha sem calendário lido = NÃO frescas. PURA. */
+function horasFrescas(j){ return agendaBoa(j)&&(j.velha===false||j.ics===1); }
+/* O registo `ag` que o clique leva (o relé guarda-o sem o interpretar; o PC escreve-o no registo e no
+   aviso): `f` ou `s`, a hora da publicação do PC que a página mostrava (sem os milésimos) e se o
+   calendário estava lido (`1`/`0`; `-` = o relé não diz). Cabe sempre no `_agBom` do relé. PURA. */
+function agTexto(fr,j){
+  var ts=(j&&typeof j.ts==='string')?j.ts.replace(/\.\d{3}Z$/,'Z'):'';
+  if(!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$/.test(ts))ts='';
+  var ic=(j&&j.ics===1)?'1':((j&&j.ics===0)?'0':'-');
+  return (fr?'f':'s')+'|'+ts+'|'+ic;
+}
 function janelaAberta(){var j=document.getElementById('janela');return !!(j&&j.hidden===false);}
 function janelaFechar(){
   var j=document.getElementById('janela'); if(!j||j.hidden!==false)return;
@@ -222,6 +240,11 @@ function render(payloadPronto,viva,abrirDia){
      estava aberto quando o relé disse `ocupada` (volta a abrir-se, sem mensagem nenhuma).
      DADO = o payload tal como veio: é dele que sai o `id` e o recurso quando a 2.ª leitura falha. */
   var DADO=data;
+  /* SEM HORAS FRESCAS (B1 parte 4): só no link CURTO v:4 (`payloadPronto`). Os v:2/v:3 e o longo ficam
+     como estão: nem aviso, nem `ag`. `viva.fr`/`viva.ag` vêm do `vivaDe`; sem `viva` não são frescas. */
+  var CURTO4=!!(payloadPronto&&data&&data.v===4);
+  var SEMFR=CURTO4&&!(viva&&viva.fr===true);
+  var AGT=(viva&&viva.ag)||agTexto(false,null);
   IMP=(data&&data.v===4&&viva&&viva.imp)?viva.imp:null;
   if(data&&data.v===4&&viva){data={};for(var kk in DADO){if(Object.prototype.hasOwnProperty.call(DADO,kk))data[kk]=DADO[kk];}data.b=viva.b;data.d=janelaHp(viva.d,DADO.hp);}
   // byDate = {iso:{starts,exA,exP}} (listas de 'HH:MM').
@@ -299,6 +322,7 @@ function render(payloadPronto,viva,abrirDia){
   var LSK='pharma_marcado_'+String(data.id||'');
   SID=String(data.id||(''+Date.now()));   // UMA vez por render: o retry reenvia o MESMO id
   var _sending=false;                     // guard de duplo clique (o botão também fica disabled)
+  var diaAberto;                          // o dia aberto no painel das horas (o "Atualizar horas" volta a abri-lo)
   function done(isoT,reaberto,pend,cego){
     // pend = hora fora da grelha, sujeita a aprovação do Bruno: texto próprio e SEM botão de
     // calendário (a marcação ainda não existe)
@@ -323,7 +347,8 @@ function render(payloadPronto,viva,abrirDia){
   var cells=[]; for(var w=0;w<4;w++){for(var wd=0;wd<5;wd++){var dt=new Date(start);dt.setDate(dt.getDate()+w*7+wd);cells.push(isoOf(dt));}}
   var lastc=parseD(cells[cells.length-1]);
   var titulo=MES[start.getMonth()]+(start.getMonth()!==lastc.getMonth()?(' – '+MES[lastc.getMonth()]):'');
-  var h='<div class="panes">';
+  var h=SEMFR?'<div class="avisohf">'+AVISO_SEM_FRESCAS+'<button class="morebtn atualizar" type="button">Atualizar horas</button></div>':'';
+  h+='<div class="panes">';
   h+='<h1>Olá! 👋 Escolha o dia e hora</h1>';
   h+='<div class="pane-cal">';
   h+='<div class="cal-h">'+titulo+'</div>';
@@ -343,6 +368,17 @@ function render(payloadPronto,viva,abrirDia){
   card.innerHTML=h;
   var timesEl=document.getElementById('times');
   card.querySelectorAll('.cell.avail').forEach(function(c){c.onclick=function(){pickDay(c.dataset.iso,c);};});
+  /* "Atualizar horas": volta a pedir as horas. Frescas -> redesenha (o aviso sai) com o mesmo dia aberto
+     e sem as horas já recusadas; senão o ecrã fica como está. Um pedido de cada vez. */
+  card.querySelectorAll('.atualizar').forEach(function(b){b.onclick=function(){
+    if(_atualizando)return; _atualizando=true; b.disabled=true;
+    pedirAgenda(String(DADO.id||''),function(nova){
+      _atualizando=false;
+      if(!(nova&&nova.fr===true)){b.disabled=false;return;}
+      RECUSADAS.forEach(function(r){nova=semHora(nova,r.slice(0,10),r.slice(11,16));});
+      render(payloadPronto,nova,diaAberto);
+    });
+  };});
   card.querySelectorAll('.altbtn').forEach(function(b){b.onclick=function(){
     if(NOVO){pickFreeDay();return;}   // v:2: seletor livre de dia+hora (o botão fica, para se poder voltar a abrir)
     b.style.display='none';
@@ -415,6 +451,7 @@ function render(payloadPronto,viva,abrirDia){
     if(data.s)body.s=data.s;
     if(data.w)body.w=data.w;
     if(ap)body.ap=1;
+    if(CURTO4)body.ag=AGT;   // o registo (B1 parte 4): só o link curto v:4; nunca muda o que o relé decide
     /* A RESPOSTA DO RELÉ É LIDA. O Apps Script responde com CORS legível (o 302 e o 200 do
        googleusercontent levam `Access-Control-Allow-Origin: *`) e o corpo vai como texto simples
        (sem cabeçalhos = text/plain, sem preflight), portanto basta ler.
@@ -445,8 +482,11 @@ function render(payloadPronto,viva,abrirDia){
          se o cliente tentou outra hora antes, não se sabe qual entrou, e diz-se "link já usado"
          (responda à mensagem) em vez de confirmar uma hora que pode não ser a marcada. */
       if(j&&j.ok===false&&!(j.error==='used'&&_tentativas>1&&_horas.every(function(h){return h===isoT;}))){recusado(j.error);return;}
-      if(data.id&&!r.cego)lsSet(LSK,(ap?'ap|':'')+isoT);
-      done(isoT,false,!!ap,r.cego);
+      /* Sem horas frescas o que se enviou é um PEDIDO: o ecrã do pedido (sem calendário), e `ap|` no
+         aparelho para reabrir igual. O corpo não leva `ap`: segue o caminho normal no PC. */
+      var comoPedido=!!ap||SEMFR;
+      if(data.id&&!r.cego)lsSet(LSK,(comoPedido?'ap|':'')+isoT);
+      done(isoT,false,comoPedido,r.cego);
       card.scrollIntoView({behavior:'smooth',block:'start'});
     },function(){
       _sending=false; if(onErr)onErr();
@@ -500,7 +540,7 @@ function render(payloadPronto,viva,abrirDia){
   // "Prefere outra hora?" abre um closure novo → perde a seleção (aceite).
   function pickDay(iso,cell,expand){
     card.querySelectorAll('.cell').forEach(function(z){z.classList.remove('sel');});
-    cell.classList.add('sel');
+    cell.classList.add('sel'); diaAberto=iso;
     var f=fmt(iso+'T00:00'); var day=byDate[iso]||altByDate[iso];
     var selT=null,selAp=0,errState=false,first=true;
     var freeOpen=false,freeH='',freeM='00';   // v:2: seletor livre de hora dentro DESTE dia
@@ -632,6 +672,14 @@ function janelaHp(d,hp){
     if(hs.length)o.push([d[n][0],hs]);}
   return o;
 }
+/* A resposta das horas (do `action=agenda`, ou a `agenda` que o `load` com `ag=1` traz) no que o
+   `render` desenha: {b,d,imp?,fr,ag}, ou null se não servir. */
+function vivaDe(j){
+  if(!agendaBoa(j))return null;
+  var v={b:j.b,d:j.d}; if(impBoa(j.f,j.x))v.imp={f:j.f,x:j.x};
+  v.fr=horasFrescas(j); v.ag=agTexto(v.fr,j);
+  return v;
+}
 function pedirAgenda(id,cb){
   var feito=false, tm=null;
   function fim(v){ if(feito)return; feito=true; clearTimeout(tm); cb(v); }
@@ -639,7 +687,7 @@ function pedirAgenda(id,cb){
   try{
     fetch(DEFAULT_R+'?action=agenda&i='+encodeURIComponent(id))
       .then(function(r){ return r.json(); })
-      .then(function(j){ if(!agendaBoa(j)){fim(null);return;} var v={b:j.b,d:j.d}; if(impBoa(j.f,j.x))v.imp={f:j.f,x:j.x}; fim(v); },function(){ fim(null); });
+      .then(function(j){ fim(vivaDe(j)); },function(){ fim(null); });
   }catch(e){ fim(null); }
 }
 /* SEM LIGAÇÃO ao abrir o link: o link está bom, por isso oferece-se "Tentar de novo" (corre o
@@ -661,13 +709,16 @@ function arranque(){
   }
   ecra('Um momento…','A carregar as datas disponíveis.');
   var to=setTimeout(function(){ if(eu===_arr)semLigacao(); },15000);
-  fetch(DEFAULT_R+'?action=load&i='+encodeURIComponent(i))
+  /* `ag=1`: o relé novo (B1 parte 4) manda as horas de um v:4 na própria resposta (`agenda`), e não é
+     preciso o 2.º pedido. O relé antigo não traz a chave: pede-se como sempre. */
+  fetch(DEFAULT_R+'?action=load&i='+encodeURIComponent(i)+'&ag=1')
     .then(function(r){ return r.json(); })
     .then(function(j){
       clearTimeout(to);
       if(eu!==_arr)return;
       var pj=(j&&j.ok&&j.p)?dec2(j.p):null;
-      if(pj&&pj.v===4)pedirAgenda(i,function(viva){ render(j.p,viva); });
+      if(pj&&pj.v===4&&j.agenda&&typeof j.agenda==='object')render(j.p,vivaDe(j.agenda));
+      else if(pj&&pj.v===4)pedirAgenda(i,function(viva){ render(j.p,viva); });
       else if(j&&j.ok&&j.p)render(j.p);
       else ecra('Link inválido','Este link já não é válido. Por favor responda diretamente à mensagem.');
     })
