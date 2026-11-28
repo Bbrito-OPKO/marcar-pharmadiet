@@ -229,7 +229,7 @@ function fmt(iso){var p=iso.split('T');var dt=parseD(p[0]);return {wd:WD[dt.getD
 // iPhone/Outlook/Google. Horas FLUTUANTES (sem Z/timezone): o evento fica na hora local de quem
 // abre, que e a hora da visita. Blob primario (melhor no Safari do iPhone), data URI em fallback
 // por feature-test (e tambem o caminho dos sandboxes dos testes, sem Blob/URL).
-function icsEsc(s){return String(s).replace(/([\\;,])/g,'\\$1').replace(/\n/g,'\\n');}
+function icsEsc(s){return String(s).replace(/([\\;,])/g,'\\$1').replace(/\r\n|\r|\n/g,'\\n');}
 function icsHref(c,isoT){var p=isoT.split('T');var d=p[0].replace(/-/g,'');var t=(p[1]||'10:00');
   var ini=(+t.split(':')[0])*60+(+t.split(':')[1]);var fim=ini+DUR_MIN;
   var s=d+'T'+t.replace(':','')+'00';var e=d+'T'+m2h(fim).replace(':','')+'00';
@@ -369,7 +369,7 @@ function render(payloadPronto,viva,abrirDia){
   /* Marcado neste aparelho num v:4: a confirmação ganha a tudo, também à lista viva vazia (a hora
      dele saiu da lista por ser dele). O `done` é a mesma função de mais abaixo (declaração, sobe).
      Os links antigos ficam pela ordem de sempre, mais abaixo. */
-  if(data&&data.v===4&&data.id){var prev4=lsGet('pharma_marcado_'+String(data.id));
+  if(data&&data.v===4&&data.id){var prev4=marcPrev(lsGet('pharma_marcado_'+String(data.id)));
     if(prev4){SID=String(data.id);var pd4=prev4.indexOf('ap|')===0;done(pd4?prev4.slice(3):prev4,true,pd4);return;}}
   if(!dates.length&&!vivaVazia&&tinhaDatas){card.innerHTML='<h1>Este link já passou</h1><p class="warn">Os dias deste link já passaram. Por favor responda diretamente à mensagem que recebeu e combinamos outro dia.</p>';return;}
   if(!dates.length&&!vivaVazia){card.innerHTML='<h1>Link inválido</h1><p class="warn">Este link de marcação não tem datas. Por favor responda diretamente à mensagem.</p>';return;}
@@ -404,7 +404,7 @@ function render(payloadPronto,viva,abrirDia){
   // link já usado neste dispositivo → estado final direto, sem calendário (uso único; o relé
   // descarta de qualquer forma um 2.º pedido com o mesmo id). Valor 'ap|<isoT>' = pedido
   // pendente de confirmação → variante certa ao reabrir.
-  var prev=data.id?lsGet(LSK):null;
+  var prev=data.id?marcPrev(lsGet(LSK)):null;
   if(prev){var pd=prev.indexOf('ap|')===0;done(pd?prev.slice(3):prev,true,pd);return;}
   // calendário 4 semanas (Seg–Sex) a partir da segunda da 1.ª semana com vaga (oferecida ou alternativa)
   // v:4 com a lista viva vazia: a partir da semana de hoje (ao fim de semana, da seguinte)
@@ -707,7 +707,22 @@ function render(payloadPronto,viva,abrirDia){
    Se o relé não responder, mostra-se um erro claro em vez de "link inválido" — a causa é
    outra (rede/relé em baixo) e o cliente merece saber que o link está bom. */
 function dec2(s){ try{ return JSON.parse(s); }catch(e){ return null; } }
-function ecra(t,p){ document.getElementById('card').innerHTML='<h1>'+t+'</h1><p class="warn">'+p+'</p>'; }
+/* O texto do ecrã vai escapado: hoje só passam textos fixos da página, e assim continua a ser só texto. */
+function escEcra(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function ecra(t,p){ document.getElementById('card').innerHTML='<h1>'+escEcra(t)+'</h1><p class="warn">'+escEcra(p)+'</p>'; }
+/* O QUE O RELÉ DIZ QUE ESTE LINK JÁ MARCOU (o `m` do `load`, relé v30): `{slot, tipo}` → o mesmo valor que o
+   `localStorage` guardaria (`slot` da lista, `ap|slot` do pedido livre). `tipo` `l` = da lista; `a`, vazio ou
+   outro = o ecrã sem calendário (nunca promete uma visita que pode não existir). Estragado ou ausente = null
+   (a página como antes). O `render` usa-o antes do `localStorage`: o relé sabe o que outro aparelho fez. */
+var MARC_RELE=null, MARC_FRACO=false;
+/* Tipo vazio (linha de antes da v30) ou desconhecido: o relé não sabe se a hora foi da lista. Aí o que
+   o aparelho guardou vale mais; sem nada no aparelho, o ecrã sem calendário. Com tipo l/, manda o relé. */
+function marcPrev(ls){ return (MARC_RELE&&!MARC_FRACO)?MARC_RELE:(ls||MARC_RELE); }
+function marcDoRele(m){
+  if(!m||typeof m!=='object'||Object.prototype.toString.call(m)==='[object Array]')return null;
+  if(typeof m.slot!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d$/.test(m.slot))return null;
+  return m.tipo==='l'?m.slot:('ap|'+m.slot);
+}
 /* AGENDA VIVA (links v:4, 15/11/2026). Pede ao relé a lista viva da zona do link e chama cb({b,d}),
    ou cb(null) se não vier nada que sirva: rede, `ok:false` (`sem agenda`, `notfound`...), resposta
    ilegível, ou sem resposta em 6 s. Com null quem chama desenha o b/d do payload. cb uma vez só: a
@@ -787,8 +802,12 @@ function arranque(){
     .then(function(j){
       clearTimeout(to);
       if(eu!==_arr)return;
+      /* `erro` = uma exceção no relé (v30): o link está bom, é o mesmo que não ter ligação. */
+      if(j&&j.ok===false&&j.error==='erro'){ semLigacao(); return; }
       var pj=(j&&j.ok&&j.p)?dec2(j.p):null;
+      MARC_RELE=pj?marcDoRele(j.m):null; MARC_FRACO=!!(MARC_RELE&&j.m.tipo!=='l'&&j.m.tipo!=='a');
       if(pj&&pj.v===4&&j.agenda&&typeof j.agenda==='object')render(j.p,vivaDe(j.agenda));
+      else if(pj&&pj.v===4&&MARC_RELE)render(j.p);
       else if(pj&&pj.v===4)pedirAgenda(i,function(viva){ render(j.p,viva); });
       else if(j&&j.ok&&j.p)render(j.p);
       else ecra('Link inválido','Este link já não é válido. Por favor responda diretamente à mensagem.');
